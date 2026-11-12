@@ -7,7 +7,7 @@
 
 > 注意: 大部分はソースコードを読んで得た知見である。実機（macOS 15.8.1 + Google日本語入力 3.34.6260）で確認できたことは、末尾のチェックリストと [mozc-e2e-mac.md](./mozc-e2e-mac.md) に記録している。
 >
-> 関連ツール: 設定を生成・適用する `mozc/build.sh` と `mozc/apply.sh`、設定一覧のHTMLを生成する `tools/mozc_overview.py`、E2Eテストの `tools/mozc_e2e_mac.swift`
+> 関連ツール: 設定を生成・適用する `mozc/build.sh` と `mozc/apply.sh`、設定一覧のHTMLを生成する `tools/mozc_overview.py`、状態遷移とキーの対応をHTMLにする `tools/mozc_statemap.py`、E2Eテストの `tools/mozc_e2e_mac.swift`
 
 ## 結論
 
