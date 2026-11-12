@@ -8,8 +8,7 @@ status	key	command
 DirectInput	Hankaku/Zenkaku	IMEOn
 DirectInput	Kanji	IMEOn
 DirectInput	ON	IMEOn
-# 未定: 再変換
-DirectInput	Ctrl Shift r	Reconvert
+# 再変換は IME オフでは定義しない (Reconvert は選択が無くてもキーを消費するため。P4)
 
 # ---------------------------------------------------------------- Precomposition (入力文字なし)
 # P4: Ctrl 系は原則定義しない (アプリへ渡す)
@@ -21,9 +20,12 @@ Precomposition	Eisu	ToggleAlphanumericMode
 Precomposition	Space	InsertSpace
 Precomposition	Shift Space	InsertAlternateSpace
 Precomposition	Backspace	Revert
-# 未定: 確定取り消し・再変換 (取り消すものが無ければアプリへ渡る想定)
+# 確定の取り消し: 確定直後だけ効く。取り消すものが無ければキーはアプリへ渡る (session.cc RequestUndo の EchoBack)
+# C-g はどの状態でも「1段階戻る」(P2)
+Precomposition	Ctrl g	Undo
 Precomposition	Ctrl Backspace	Undo
-Precomposition	Ctrl Shift r	Reconvert
+# 再変換: アプリで選択中の文字列を変換し直す。選択が無ければ macOS では Undo を試す。キーは常に IME が消費する
+Precomposition	Ctrl Shift Space	Reconvert
 
 # ---------------------------------------------------------------- Composition (読み入力中)
 Composition	Hankaku/Zenkaku	IMEOff
@@ -62,10 +64,10 @@ Composition	Backspace	Backspace
 Composition	Ctrl h	Backspace
 Composition	Delete	Delete
 Composition	Ctrl d	Delete
-# 文字種 (未定: ことえり由来の C-j/k/l/;/: を残すか)
+# 文字種: SKK に寄せて C-j ひらがな / C-q 全角カタカナ / C-l 半角英数 (試行中)。C-; C-: C-' はことえり由来
 Composition	Ctrl j	DisplayAsHiragana
-Composition	Ctrl k	DisplayAsFullKatakana
-Composition	Ctrl l	DisplayAsFullAlphanumeric
+Composition	Ctrl q	DisplayAsFullKatakana
+Composition	Ctrl l	DisplayAsHalfAlphanumeric
 Composition	Ctrl ;	DisplayAsHalfWidth
 Composition	Ctrl :	DisplayAsHalfAlphanumeric
 Composition	Ctrl '	DisplayAsHalfAlphanumeric
@@ -123,14 +125,16 @@ Conversion	Shift Space	ConvertPrev
 Conversion	Down	ConvertNext
 Conversion	Up	ConvertPrev
 Conversion	Shift Tab	ConvertPrev
+Conversion	Ctrl v	ConvertNextPage
+Conversion	Ctrl Shift v	ConvertPrevPage
 Conversion	PageDown	ConvertNextPage
 Conversion	PageUp	ConvertPrevPage
 Conversion	Shift Down	ConvertNextPage
 Conversion	Shift Up	ConvertPrevPage
 # 文字種 (Composition と同じ)
 Conversion	Ctrl j	DisplayAsHiragana
-Conversion	Ctrl k	DisplayAsFullKatakana
-Conversion	Ctrl l	DisplayAsFullAlphanumeric
+Conversion	Ctrl q	DisplayAsFullKatakana
+Conversion	Ctrl l	DisplayAsHalfAlphanumeric
 Conversion	Ctrl ;	DisplayAsHalfWidth
 Conversion	Ctrl :	DisplayAsHalfAlphanumeric
 Conversion	Ctrl '	DisplayAsHalfAlphanumeric
