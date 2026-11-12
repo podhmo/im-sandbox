@@ -1,11 +1,13 @@
 # Mozcのカスタマイズ調査メモ（macOS・GUIを使わない設定適用）
 
 調査日: 2026-11-13
-参照ソース: google/mozc master (`a4541df`, 2026-11-09)
+参照ソース: google/mozc master (`a4541df`, 2026-11-09)。`ghq get --shallow google/mozc` で `~/ghq/github.com/google/mozc` に取得済み（以下 `$MOZC` と表記）
 
 目的は [q-and-a.md](../../ja/q-and-a.md) のQ6にあるEmacs風キーバインドを、**GUIを操作せずに**、リポジトリ管理された設定ファイルからMozcへ適用すること。
 
-> 注意: このメモはソースコードを読んで得た知見であり、実機（macOS）ではまだ検証していない。「要検証」と書いた箇所は特に注意する。
+> 注意: 大部分はソースコードを読んで得た知見である。実機（macOS 15.8.1 + Google日本語入力 3.34.6260）で確認できたことは、末尾のチェックリストと [mozc-e2e-mac.md](./mozc-e2e-mac.md) に記録している。
+>
+> 関連ツール: 設定を生成・適用する `mozc/build.sh` と `mozc/apply.sh`、設定一覧のHTMLを生成する `tools/mozc_overview.py`、E2Eテストの `tools/mozc_e2e_mac.swift`
 
 ## 結論
 
@@ -34,7 +36,7 @@ macOSで使える選択肢は2つある。
 
 | 選択肢 | 入手方法 | 設定ディレクトリ | 変換プロセス |
 | --- | --- | --- | --- |
-| Google日本語入力 | `brew install --cask google-japanese-ime`（調査時点の版は 3.34.6260） | `~/Library/Application Support/Google/JapaneseInput/` | `GoogleJapaneseInputConverter`（要検証） |
+| Google日本語入力 | `brew install --cask google-japanese-ime`（調査時点の版は 3.34.6260） | `~/Library/Application Support/Google/JapaneseInput/` | `GoogleJapaneseInputConverter` |
 | Mozc（OSS版） | 自前でビルド（`bazelisk build package --config release_build`）、またはGitHub Actionsの成果物 `Mozc.pkg` | `~/Library/Application Support/Mozc/` | `MozcConverter` |
 
 ディレクトリの切り替えは `src/base/system_util.cc` で行われている（`GOOGLE_JAPANESE_INPUT_BUILD` の場合は `Google/JapaneseInput`、それ以外は `Mozc`）。プロセス名 `MozcConverter` は `src/mac/installer/postflight_template.sh` の `killall MozcConverter` で確認した。
@@ -46,6 +48,19 @@ macOSで使える選択肢は2つある。
 - proto2は未知のフィールドを無視するため、Mozc masterの `config.proto` でエンコードしたファイルも基本的には読める。ただし、新しく追加されたフィールドは効かない可能性がある。
 - WindowsでもGoogle日本語入力を使う構成（q-and-a.md Q8）と揃えられる。
 - 一方、Linux（Fcitx5 + Mozc）はOSS版になる。キーマップのTSVはどちらでも共通の形式である。
+
+### 実機で確認したこと（Google日本語入力 3.34.6260、brew cask）
+
+- 本体: `/Library/Input Methods/GoogleJapaneseInput.app`
+- 変換サーバー: `.../Contents/Resources/GoogleJapaneseInputConverter.app/Contents/MacOS/GoogleJapaneseInputConverter`
+- LaunchAgent: `/Library/LaunchAgents/com.google.inputmethod.Japanese.Converter.plist`
+  - `KeepAlive = false` で、`MachServices`（`com.google.inputmethod.Japanese.Converter.session`）によりオンデマンドで起動する。
+  - そのため、`killall GoogleJapaneseInputConverter` で停止しても、次にIMEへキーが送られた時点で再起動される見込みである。
+- 入力ソースの追加はGUIで行う（システム設定 → キーボード → 入力ソース → 「＋」）。
+  - 一覧は言語ごとに分かれている。左で「**日本語**」を選ぶと、「**ひらがな (Google)**」などの入力モード名で表示される。「Google日本語入力」や「Mozc」という名前では出てこない。
+  - ログインし直す必要はなかった。
+  - `TISEnableInputSource` でプログラムから有効化する方法も試した。APIは `noErr` を返したが、入力ソースの設定には反映されなかった。
+- `~/Library/Application Support/Google/JapaneseInput/` はインストール直後には**存在しない**。入力ソースを追加して変換サーバーが起動した時点で作成された（`boundary.db` などが置かれるが、`config1.db` はない）。使い始める前に `config1.db` を置く場合は、ディレクトリを作成する必要がある。
 
 ## 設定ファイルの仕様
 
@@ -179,9 +194,11 @@ Conversion	Ctrl Shift f	SegmentWidthExpand
 
 ```sh
 brew install protobuf   # protoc
-# config.proto は import のない単独ファイルなので、1ファイルだけ取得すればよい
-curl -fsSLO https://raw.githubusercontent.com/google/mozc/master/src/protocol/config.proto
-curl -fsSLO https://raw.githubusercontent.com/google/mozc/master/src/data/keymap/kotoeri.tsv
+ghq get --shallow google/mozc
+MOZC="$(ghq root)/github.com/google/mozc"
+# config.proto は import のない単独ファイルなので、そのまま protoc に渡せる
+#   $MOZC/src/protocol/config.proto
+#   $MOZC/src/data/keymap/kotoeri.tsv
 ```
 
 ### 管理するファイル
@@ -191,7 +208,7 @@ curl -fsSLO https://raw.githubusercontent.com/google/mozc/master/src/data/keymap
 
 ```sh
 DB="$HOME/Library/Application Support/Google/JapaneseInput/config1.db"   # OSS版なら .../Mozc/config1.db
-protoc --decode=mozc.config.Config config.proto < "$DB" > config.base.textproto
+protoc -I "$MOZC/src/protocol" --decode=mozc.config.Config config.proto < "$DB" > config.base.textproto
 ```
 
 `general_config`（`last_modified_time` など）や既存の `session_keymap` / `custom_keymap_table` は、base側から削除しておく。
@@ -201,11 +218,13 @@ protoc --decode=mozc.config.Config config.proto < "$DB" > config.base.textproto
 ```sh
 #!/bin/sh
 set -eu
+MOZC="$(ghq root)/github.com/google/mozc"
+PROTO="-I $MOZC/src/protocol config.proto"
 DIR="$HOME/Library/Application Support/Google/JapaneseInput"
 # DIR="$HOME/Library/Application Support/Mozc"
 
 # 1. キーマップTSV = kotoeri.tsv（ヘッダー行を含む） + 差分
-cat kotoeri.tsv keymap.overrides.tsv > keymap.tsv
+cat "$MOZC/src/data/keymap/kotoeri.tsv" keymap.overrides.tsv > keymap.tsv
 
 # 2. textprotoを組み立てる（TSVはエスケープした文字列としてbytesフィールドに埋め込む）
 {
@@ -215,10 +234,11 @@ cat kotoeri.tsv keymap.overrides.tsv > keymap.tsv
 } > config.textproto
 
 # 3. バイナリにエンコードし、デコードして中身を確認する
-protoc --encode=mozc.config.Config config.proto < config.textproto > config1.db
-protoc --decode=mozc.config.Config config.proto < config1.db | head
+protoc --encode=mozc.config.Config $PROTO < config.textproto > config1.db
+protoc --decode=mozc.config.Config $PROTO < config1.db | head
 
-# 4. バックアップを取ってから置き換える
+# 4. バックアップを取ってから置き換える（初回はディレクトリがないので作成する）
+mkdir -p "$DIR"
 [ -f "$DIR/config1.db" ] && cp "$DIR/config1.db" "$DIR/config1.db.bak.$(date +%s)"
 cp config1.db "$DIR/config1.db"
 
@@ -234,15 +254,18 @@ killall GoogleJapaneseInputConverter 2>/dev/null || killall MozcConverter 2>/dev
 
 ## 未検証・今後確認すること
 
-- [ ] Google日本語入力（brew版）で、上記パスの `config1.db` の差し替えとプロセスの再起動だけで反映されるか
-- [ ] Google日本語入力の変換プロセスの実際の名前（`pgrep -fl JapaneseInput` で確認する）
-- [ ] `Ctrl Shift b/f` がmacOSで期待通りに届くか
-- [ ] Precompositionの `Ctrl n` が、Cocoaアプリ（TextEdit、ブラウザーのテキストエリアなど）で次行移動になるか
+- [x] Google日本語入力（brew版）で、上記パスの `config1.db` の差し替えとプロセスの再起動だけで反映されるか → 反映された（`mozc/apply.sh`）
+- [x] Google日本語入力の変換プロセスの実際の名前 → `GoogleJapaneseInputConverter`（3.34.6260で確認）
+- [x] `Ctrl Shift b/f` がmacOSで期待通りに届くか → 届いた（E2E: [mozc-e2e-mac.md](./mozc-e2e-mac.md)）
+- [x] Precompositionの `Ctrl p` / `Ctrl a` がTextEditに渡ること（E2Eで確認）。ブラウザーなどほかのアプリは未確認
 - [ ] Composition中の `Ctrl n`（サジェストなし）はIMEに消費されて何も起きない。これを `Convert` などに割り当てるかどうか
 - [ ] TSVのうち、OS共通にできる部分と、OSごとの差分（Fcitx5でのCtrl+Shiftの扱いなど）の切り分け
 - [ ] GUIで保存すると上書きされる問題への対策（GUIを使わないという運用でよいか）
 
 ## 参照したソース
+
+パスは `$MOZC`（`~/ghq/github.com/google/mozc`）からの相対パス。
+
 
 - `docs/configurations.md`: config1.dbのprotoc encode/decodeの手順
 - `src/protocol/config.proto`: `Config` メッセージ
