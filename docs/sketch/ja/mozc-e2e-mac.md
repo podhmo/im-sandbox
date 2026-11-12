@@ -33,7 +33,22 @@ swift tools/mozc_e2e_mac.swift            # 全ケースを実行
 swift tools/mozc_e2e_mac.swift --only C-g # 名前の一部で絞り込む
 ```
 
-実行方法: **iTerm2のタブで `swift` コマンドをそのまま実行する**（iTerm2にアクセシビリティ権限を付ける）。Claude Code（`!` を含む）やherdrの配下からは、権限が引き継がれないため動かない（詳細は後述）。
+**通常は `mozc/e2e.sh` 経由で実行する**（後述の学習対策のため）。
+
+```
+./mozc/e2e.sh custom    # カスタムキーマップで実行（既定）
+./mozc/e2e.sh kotoeri   # macOSの既定キーマップで実行（テストが差分を検出できるかの確認用）
+./mozc/e2e.sh custom -- --only C-g
+```
+
+`e2e.sh` は次の順に処理する。
+
+1. 現在の `config1.db` を退避する。
+2. 指定したキーマップに `history_learning_level: NO_HISTORY` を加えた設定へ差し替え、変換サーバーを再起動する。
+3. E2Eを実行する。
+4. 終了時（失敗や中断を含む）に、元の `config1.db` に戻す。
+
+実行方法: **iTerm2のタブでそのまま実行する**（iTerm2にアクセシビリティ権限を付ける）。Claude Code（`!` を含む）やherdrの配下からは、権限が引き継がれないため動かない（詳細は後述）。
 
 処理の流れ:
 
@@ -85,7 +100,27 @@ PASS  precomposition: C-p / C-a はアプリに渡る
 - `C-S-f` / `C-S-b` は既定では未定義なので、文節が変わらない。
 - `C-e` は既定では「前の候補」（ConvertPrev）なので、最後の文節に移動しない。
 
-追加・変更したキーのケースがPASSしたことは、カスタムキーマップが効いている根拠になる（逆に、既定のキーマップで実際に失敗することはまだ確認していない）。
+追加・変更したキーのケースがPASSしたことは、カスタムキーマップが効いている根拠になる（既定のキーマップで実際にFAILすることも確認した。後述）。
+
+### 学習を無効にして、既定のキーマップと比較した結果（2026-11-13）
+
+`./mozc/e2e.sh kotoeri`（既定のキーマップ + NO_HISTORY）:
+
+```
+PASS  composition: C-g でキャンセル
+PASS  composition: C-b / C-d / C-a / C-e / C-h
+FAIL  conversion: C-g で変換キャンセル                  got: "ここでは着物を脱ぐ"
+FAIL  conversion: C-S-f で文節を伸ばす                  got: "ここでは着物を脱ぐ"
+FAIL  conversion: C-S-b で縮める + C-e / C-a で文節移動  got: "ここでは着物を脱ぐ"
+FAIL  conversion: C-f / C-b で文節移動                  got: "ここではキモノヲ脱ぐ"
+PASS  conversion: C-n → C-p で元の候補に戻る
+PASS  precomposition: C-p / C-a はアプリに渡る
+4/8 passed
+```
+
+`./mozc/e2e.sh custom`（カスタムキーマップ + NO_HISTORY）: **8/8 passed**
+
+予想と完全に一致した。追加・変更したキーに依存するconversion系の4件だけが、既定のキーマップでFAILする。`C-f` / `C-b` のケースが `キモノヲ` になるのは、前準備の `C-S-f` が効かず、既定にもある `C-k`（カタカナ表示）だけが効いたためである。
 
 ## 分かったこと・ハマりどころ
 
@@ -112,13 +147,21 @@ PASS  precomposition: C-p / C-a はアプリに渡る
   | `com.google.inputmethod.Japanese.FullWidthRoman` | 全角英数 (Google) |
   | `com.google.inputmethod.Japanese.HalfWidthKana` | 半角カナ (Google) |
 
-- **学習履歴への影響。** テストで確定した文字列は、ユーザーの学習履歴に入りうる。気になる場合は、テストの前後で設定の `incognito_mode` を切り替えることを検討する（未実装）。
+- **学習でテストが汚染される（実際に起きた）。** テストで確定した `ここではきものをぬグ` が、文節の区切り（`ぬ|グ`）も含めて学習された。その後、既定のキーマップで流したところ、変換した時点で期待値がそのまま出たため、本来失敗するはずのケースが2件PASSしてしまった。
+  - 「変換候補に依存しない期待値」にするだけでは不十分である。テスト自身が確定した結果が、次の実行では最上位の候補になってしまう。
+  - 対策として、テスト中は `history_learning_level: NO_HISTORY` にする。ソースを読むと、学習の3つの仕組みはいずれも、`NO_HISTORY` のときは学習結果を使わず、`DEFAULT_HISTORY` 以外のときは記録もしない。
+    - `prediction/user_history_predictor.cc`（予測入力の履歴。`.history.db` に暗号化して保存される）
+    - `rewriter/user_segment_history_rewriter.cc`（候補の学習。`segment.db`）
+    - `rewriter/user_boundary_history_rewriter.cc`（文節区切りの学習。`boundary.db`）
+  - `incognito_mode` では記録は止まるが、境界の学習以外では既存の学習結果が使われる可能性がある。そのため `NO_HISTORY` を選んだ。
+  - これにより、学習データを消さずにテストを再現できるようになり、テストの実行が普段使いの学習にも残らない。
 - **TextEditの状態に依存する。** 自動修正や自動大文字化など、TextEdit側の設定で結果が変わる可能性がある。
 
 ## 未検証・今後
 
 - [x] アクセシビリティ権限を付与したうえでの実行結果: 素のiTerm2タブで `swift tools/mozc_e2e_mac.swift` を実行し、**8/8 PASS**（2026-11-13）
 - [x] キー間の待ち時間（現在40ms、変換後は200ms）: 今回の環境では十分だった
+- [x] 既定のキーマップで、追加したキーのケースが実際にFAILすること（NO_HISTORYで4/8）
 - [ ] `C-S-f` を12回押せば、どの読みでも1文節になるか（文節数が多いと足りない）
 - [x] precompositionのケースで、TextEditの `C-p` / `C-a` が期待通りに動くか: PASS（IMEオン・未入力のときはアプリに渡る）
 - [ ] （参考）Claude Code経由で実行する場合に、ビルドしたバイナリ（`mozc/out/mozc-e2e-mac`）を許可する方法が通るか。iTerm2から直接実行すれば足りるので、優先度は低い
