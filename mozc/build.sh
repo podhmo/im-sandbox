@@ -1,13 +1,13 @@
 #!/bin/sh
-# keymap.overrides.tsv と config.base.textproto から out/config1.db を生成する。
+# keymap.tsv と config.base.textproto から out/config1.db を生成する。
 set -eu
 HERE=$(cd "$(dirname "$0")" && pwd)
 MOZC=${MOZC:-"$(ghq root)/github.com/google/mozc"}
 OUT="$HERE/out"
 mkdir -p "$OUT"
 
-# 1. キーマップ = kotoeri.tsv (1行目のヘッダー込み) + 差分
-cat "$MOZC/src/data/keymap/kotoeri.tsv" "$HERE/keymap.overrides.tsv" > "$OUT/keymap.tsv"
+# 1. キーマップ (全体を自前で書く。docs/ja/article.html の P5)
+cp "$HERE/keymap.tsv" "$OUT/keymap.tsv"
 
 # 2. textproto を組み立てる (TSV は bytes フィールドに文字列として埋め込む)
 {

@@ -1,0 +1,145 @@
+status	key	command
+# 1行目のヘッダーは Mozc が無条件に読み飛ばすので消さないこと。
+# 仕様は docs/ja/article.html。書式: 状態<TAB>キー<TAB>コマンド
+# 叩き台 (2026-11-13): 文節の伸縮に C-i/C-o と C-S-b/C-S-f の両方を割り当てて試す。
+# Option 系 (kotoeri の Option j/l/i/k/z/x/c/a/s/Space/F1-F5) は入れない (P3)。
+
+# ---------------------------------------------------------------- DirectInput (IME オフ)
+DirectInput	Hankaku/Zenkaku	IMEOn
+DirectInput	Kanji	IMEOn
+DirectInput	ON	IMEOn
+# 未定: 再変換
+DirectInput	Ctrl Shift r	Reconvert
+
+# ---------------------------------------------------------------- Precomposition (入力文字なし)
+# P4: Ctrl 系は原則定義しない (アプリへ渡す)
+Precomposition	Hankaku/Zenkaku	IMEOff
+Precomposition	Kanji	IMEOff
+Precomposition	OFF	IMEOff
+Precomposition	ON	IMEOn
+Precomposition	Eisu	ToggleAlphanumericMode
+Precomposition	Space	InsertSpace
+Precomposition	Shift Space	InsertAlternateSpace
+Precomposition	Backspace	Revert
+# 未定: 確定取り消し・再変換 (取り消すものが無ければアプリへ渡る想定)
+Precomposition	Ctrl Backspace	Undo
+Precomposition	Ctrl Shift r	Reconvert
+
+# ---------------------------------------------------------------- Composition (読み入力中)
+Composition	Hankaku/Zenkaku	IMEOff
+Composition	Kanji	IMEOff
+Composition	OFF	IMEOff
+Composition	ON	IMEOn
+Composition	Eisu	ToggleAlphanumericMode
+# 進む
+Composition	Space	Convert
+Composition	Ctrl n	PredictAndConvert
+Composition	Tab	PredictAndConvert
+Composition	Ctrl i	PredictAndConvert
+Composition	F2	ConvertWithoutHistory
+# 抜ける
+Composition	Enter	Commit
+Composition	Ctrl m	Commit
+Composition	VirtualEnter	Commit
+# 戻る
+Composition	ESC	Cancel
+Composition	Ctrl g	Cancel
+# カーソル
+Composition	Ctrl b	MoveCursorLeft
+Composition	Ctrl f	MoveCursorRight
+Composition	Ctrl a	MoveCursorToBeginning
+Composition	Ctrl e	MoveCursorToEnd
+Composition	Left	MoveCursorLeft
+Composition	Right	MoveCursorRight
+Composition	Home	MoveCursorToBeginning
+Composition	End	MoveCursorToEnd
+Composition	Ctrl Left	MoveCursorToBeginning
+Composition	Ctrl Right	MoveCursorToEnd
+Composition	VirtualLeft	MoveCursorLeft
+Composition	VirtualRight	MoveCursorRight
+# 削除
+Composition	Backspace	Backspace
+Composition	Ctrl h	Backspace
+Composition	Delete	Delete
+Composition	Ctrl d	Delete
+# 文字種 (未定: ことえり由来の C-j/k/l/;/: を残すか)
+Composition	Ctrl j	DisplayAsHiragana
+Composition	Ctrl k	DisplayAsFullKatakana
+Composition	Ctrl l	DisplayAsFullAlphanumeric
+Composition	Ctrl ;	DisplayAsHalfWidth
+Composition	Ctrl :	DisplayAsHalfAlphanumeric
+Composition	Ctrl '	DisplayAsHalfAlphanumeric
+Composition	F6	DisplayAsHiragana
+Composition	F7	DisplayAsFullKatakana
+Composition	F8	DisplayAsHalfWidth
+Composition	F9	DisplayAsFullAlphanumeric
+Composition	F10	DisplayAsHalfAlphanumeric
+
+# ---------------------------------------------------------------- Suggestion (サジェスト表示中)
+# Composition を引き継ぐ (C-n も Composition の定義を使う)。
+Suggestion	Down	PredictAndConvert
+Suggestion	Shift Enter	CommitFirstSuggestion
+
+# ---------------------------------------------------------------- Conversion (変換中)
+Conversion	Hankaku/Zenkaku	IMEOff
+Conversion	Kanji	IMEOff
+Conversion	OFF	IMEOff
+Conversion	ON	IMEOn
+# 抜ける
+Conversion	Enter	Commit
+Conversion	Ctrl m	Commit
+Conversion	VirtualEnter	CommitOnlyFirstSegment
+# 戻る
+Conversion	ESC	Cancel
+Conversion	Ctrl g	Cancel
+Conversion	Backspace	Cancel
+Conversion	Ctrl h	Cancel
+# 文節の移動
+Conversion	Ctrl b	SegmentFocusLeft
+Conversion	Ctrl f	SegmentFocusRight
+Conversion	Ctrl a	SegmentFocusFirst
+Conversion	Ctrl e	SegmentFocusLast
+Conversion	Left	SegmentFocusLeft
+Conversion	Right	SegmentFocusRight
+Conversion	Home	SegmentFocusFirst
+Conversion	End	SegmentFocusLast
+Conversion	Ctrl Left	SegmentFocusFirst
+Conversion	Ctrl Right	SegmentFocusLast
+# 文節の伸縮: 主に C-i/C-o を使う (決定)。P6 により Tab も C-i と同じにする。C-S-b/C-S-f も同じ操作として残す (決定)
+Conversion	Ctrl i	SegmentWidthShrink
+Conversion	Tab	SegmentWidthShrink
+Conversion	Ctrl o	SegmentWidthExpand
+Conversion	Ctrl Shift b	SegmentWidthShrink
+Conversion	Ctrl Shift f	SegmentWidthExpand
+Conversion	Shift Left	SegmentWidthShrink
+Conversion	Shift Right	SegmentWidthExpand
+Conversion	VirtualLeft	SegmentWidthShrink
+Conversion	VirtualRight	SegmentWidthExpand
+# 候補
+Conversion	Ctrl n	ConvertNext
+Conversion	Ctrl p	ConvertPrev
+Conversion	Space	ConvertNext
+Conversion	Shift Space	ConvertPrev
+Conversion	Down	ConvertNext
+Conversion	Up	ConvertPrev
+Conversion	Shift Tab	ConvertPrev
+Conversion	PageDown	ConvertNextPage
+Conversion	PageUp	ConvertPrevPage
+Conversion	Shift Down	ConvertNextPage
+Conversion	Shift Up	ConvertPrevPage
+# 文字種 (Composition と同じ)
+Conversion	Ctrl j	DisplayAsHiragana
+Conversion	Ctrl k	DisplayAsFullKatakana
+Conversion	Ctrl l	DisplayAsFullAlphanumeric
+Conversion	Ctrl ;	DisplayAsHalfWidth
+Conversion	Ctrl :	DisplayAsHalfAlphanumeric
+Conversion	Ctrl '	DisplayAsHalfAlphanumeric
+Conversion	F6	DisplayAsHiragana
+Conversion	F7	DisplayAsFullKatakana
+Conversion	F8	DisplayAsHalfWidth
+Conversion	F9	DisplayAsFullAlphanumeric
+Conversion	F10	DisplayAsHalfAlphanumeric
+
+# ---------------------------------------------------------------- Prediction (予測候補の選択中)
+# Conversion を引き継ぐ
+Prediction	Ctrl Delete	DeleteSelectedCandidate

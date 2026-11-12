@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>TODO: Emacs風キーマップ</title>
+<style>
+:root { --fg:#222; --bg:#fff; --muted:#666; --line:#ddd; --code:#f4f4f4; --done:#1a7f37; }
+@media (prefers-color-scheme: dark) {
+  :root { --fg:#ddd; --bg:#16181c; --muted:#999; --line:#3a3d44; --code:#24272e; --done:#3fb950; }
+}
+body { font-family: -apple-system, "Hiragino Sans", sans-serif; color:var(--fg); background:var(--bg);
+       max-width: 60em; margin: 2em auto; padding: 0 1em; line-height: 1.7; }
+h2 { border-bottom: 1px solid var(--line); margin-top: 2em; }
+code, kbd { background: var(--code); padding: 0 .3em; border-radius: 3px; font-size: .92em; }
+ul.todo { list-style: none; padding-left: 0; }
+ul.todo > li { padding: .4em 0 .4em 1.8em; border-bottom: 1px dashed var(--line); text-indent: -1.8em; }
+ul.todo > li::before { content: "☐"; display: inline-block; width: 1.8em; text-indent: 0; }
+ul.todo > li.done { color: var(--muted); }
+ul.todo > li.done::before { content: "☑"; color: var(--done); }
+.ref, .note { color: var(--muted); font-size: .88em; }
+</style>
+</head>
+<body>
+<h1>TODO: Emacs風キーマップ</h1>
+<p class="note">
+決まった内容は <a href="article.html">article.html</a> に書く。項目の末尾にある「→ 4.2」などは、article.html の節番号を指す。
+</p>
+
+<h2>決めること</h2>
+<ul class="todo">
+<li class="done">原則 P1・P2・P4・P5・P6 を採用する <span class="ref">→ 2</span></li>
+<li class="done">P3 の新しい案（よく使う操作はCtrl 1つで押せるキーにし、Ctrl+Shiftは同じ操作をする別のキーとしてだけ使う。Meta/Alt/Optionは使わない）を採用する <span class="ref">→ 2</span></li>
+<li class="done">文節の伸縮には <kbd>C-i</kbd>/<kbd>C-o</kbd> を主に使う。変換中のTabも「縮める」にそろえる（P6） <span class="ref">→ 4.3</span></li>
+<li class="done"><kbd>C-S-b</kbd>/<kbd>C-S-f</kbd> を同じ操作をする別のキーとして残す <span class="ref">→ 4.3</span></li>
+<li class="done">kotoeri.tsv への追記をやめ、キーマップ全体を自分で書く（P5） <span class="ref">→ 2</span></li>
+<li class="done">読み入力中の <kbd>C-n</kbd> は予測変換に入る（<code>PredictAndConvert</code>） <span class="ref">→ 3</span></li>
+<li>読み入力中の <kbd>C-p</kbd> に何か割り当てるか <span class="ref">→ 4.2</span></li>
+<li>確定の取り消し（<code>Undo</code>）を残すか。残す場合、<kbd>C-Backspace</kbd> にするか <kbd>C-/</kbd> にするか <span class="ref">→ 4.1</span></li>
+<li>再変換（<kbd>C-S-r</kbd>）を残すか <span class="ref">→ 4.1</span></li>
+<li>文字種の切り替え（<kbd>C-j</kbd> <kbd>C-k</kbd> <kbd>C-l</kbd> <kbd>C-;</kbd> <kbd>C-:</kbd>）を残すか、別のキーにするか <span class="ref">→ 4.2</span></li>
+<li>候補のページ送りを <kbd>PageDown</kbd>/<kbd>PageUp</kbd> だけにするか、<kbd>C-v</kbd> も使うか（<kbd>M-v</kbd> はP3に反する） <span class="ref">→ 4.3</span></li>
+<li>先頭の文節だけを確定する <code>CommitOnlyFirstSegment</code> にキーを割り当てるか <span class="ref">→ 4.3</span></li>
+<li class="done">読み入力中の <kbd>Tab</kbd> と <kbd>C-i</kbd> も予測変換にする（P6） <span class="ref">→ 4.4</span></li>
+<li>F6〜F10、<kbd>Eisu</kbd>、<kbd>Hankaku/Zenkaku</kbd> など、Ctrl系以外のキーをどこまで引き継ぐか</li>
+<li>Suggestion / Prediction に独自の定義を持たせないという方針でよいか <span class="ref">→ 4.4</span></li>
+</ul>
+
+<h2>作ること</h2>
+<ul class="todo">
+<li class="done">article.html に沿って、キーマップ全体の叩き台 <code>mozc/keymap.tsv</code> を書く（1行目はヘッダー）</li>
+<li class="done"><code>python3 -I tools/mozc_statemap.py --keymap mozc/keymap.tsv -o mozc/out/statemap.draft.html</code> で表示して、遷移図と「キーから引く」表を確認する</li>
+<li class="done"><code>mozc/build.sh</code> を、kotoeri.tsv と <code>keymap.overrides.tsv</code> を連結する方式から、<code>keymap.tsv</code> だけを使う方式に切り替える</li>
+<li>E2E（<code>mozc/e2e.sh</code>）に、遷移3方向（進む・抜ける・戻る）のケースを追加する</li>
+</ul>
+
+<h2>確かめること（macOS）</h2>
+<ul class="todo">
+<li class="done">叩き台（<code>mozc/keymap.tsv</code>）を実機で使い、変換中に <kbd>C-i</kbd>/<kbd>C-o</kbd> と <kbd>C-S-b</kbd>/<kbd>C-S-f</kbd> で文節を伸縮して打ち比べる（→ P3, 4.3）。<kbd>C-S-f</kbd> は一手間かかり、これだけに頼るのは厳しかった</li>
+<li class="done">読み入力中の <kbd>C-n</kbd> を予測変換（<code>PredictAndConvert</code>）にして、<kbd>Space</kbd> による変換と比べる</li>
+<li>叩き台を実機で使い、変換中の Tab（叩き台では「文節を縮める」）に違和感がないか確かめる</li>
+<li class="done"><kbd>C-S-b</kbd>/<kbd>C-S-f</kbd> がMozcに届く（E2Eで確認済み）</li>
+<li class="done">入力文字なしの状態で <kbd>C-p</kbd>/<kbd>C-a</kbd> がTextEditに渡る（E2Eで確認済み）</li>
+<li>OSやアプリが Ctrl+Shift+文字キー をどれだけ使っているか調べる（変換中はIMEが先にキーを受け取るので問題ないが、入力文字なしの状態ではアプリが使う）</li>
+<li>入力文字なしの状態で、Ctrlキーがブラウザー（Firefox / Chrome）のテキストエリアに渡る</li>
+<li>取り消せる確定がないときに <code>Undo</code> のキーを押すと、そのキーはアプリに渡るか（ソース上はそう読める）</li>
+<li>選択している文字列がないときに <code>Reconvert</code> のキーを押すと、そのキーはアプリに渡るか</li>
+<li>読み入力中の <kbd>C-n</kbd> を、サジェスト候補が出ているときと出ていないときの両方で試し、挙動の差がなくなったか</li>
+<li>変換中に <kbd>C-g</kbd> を2回押すと、読みが破棄されて入力文字なしに戻るか</li>
+</ul>
+
+<h2>確かめること（Linux / WSLg / Windows）</h2>
+<ul class="todo">
+<li>Fcitx5 + Mozcで <kbd>C-i</kbd>/<kbd>C-o</kbd>（と <kbd>C-S-b</kbd>/<kbd>C-S-f</kbd>）が届くか</li>
+<li>Fcitx5で <kbd>C-i</kbd> と <kbd>Tab</kbd>、<kbd>C-m</kbd> と <kbd>Enter</kbd>、<kbd>C-h</kbd> と <kbd>Backspace</kbd> が区別されるか（P6の前提）</li>
+<li>WSLgで、Windows側のショートカットに取られずにLinuxアプリまで届くキーの一覧</li>
+<li>WindowsのGoogle日本語入力に、同じ <code>config1.db</code> を適用できるか</li>
+<li>Firefoxの <code>about:keyboard</code> で <kbd>Ctrl+N</kbd> を外せるか</li>
+</ul>
+
+<h2>運用</h2>
+<ul class="todo">
+<li>GUIの設定画面で保存すると <code>config1.db</code> が上書きされる問題に、どう対処するか</li>
+</ul>
+</body>
+</html>
