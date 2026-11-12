@@ -85,7 +85,7 @@ Mozcの既定キーマップ（kotoeri.tsv）は参考にするが、従う必�
 <tr><td>カーソル</td><td>1文字左へ / 右へ / 先頭へ / 末尾へ</td><td><kbd>C-b</kbd> <kbd>C-f</kbd> <kbd>C-a</kbd> <kbd>C-e</kbd></td><td><span class="s plan">案</span></td></tr>
 <tr><td>削除</td><td>前の文字を削除 / 後の文字を削除</td><td><kbd>C-h</kbd> <kbd>C-d</kbd></td><td><span class="s plan">案</span></td></tr>
 <tr><td>文字種</td><td>ひらがな / 全角カタカナ / 半角英数 などで表示する</td><td>SKKに寄せる: <kbd>C-j</kbd> ひらがな / <kbd>C-q</kbd> 全角カタカナ / <kbd>C-l</kbd> 半角英数。<kbd>C-;</kbd> <kbd>C-:</kbd> <kbd>C-'</kbd>（ことえり由来）と F6〜F10 も残す</td><td><span class="s plan">案</span><br><span class="note">ことえり由来の <kbd>C-k</kbd>（全角カタカナ）は外した。全角英数で表示するキーは F9 だけになる</span></td></tr>
-<tr><td>（なし）</td><td><kbd>C-p</kbd></td><td>何も割り当てない?</td><td><span class="s open">未定</span></td></tr>
+<tr><td>（なし）</td><td><kbd>C-p</kbd> には何も割り当てない（押してもIMEに捨てられるだけ）</td><td><kbd>C-p</kbd></td><td><span class="s ok">決定</span></td></tr>
 </table>
 
 <h3>4.3 変換中</h3>
@@ -98,7 +98,7 @@ Mozcの既定キーマップ（kotoeri.tsv）は参考にするが、従う必�
 <tr><td>候補</td><td>次のページ / 前のページ</td><td><kbd>C-v</kbd> <kbd>C-S-v</kbd>、<kbd>PageDown</kbd> <kbd>PageUp</kbd></td><td><span class="s ok">決定</span><br><span class="note">Emacsの <kbd>M-v</kbd> はP3でMetaを使わないため、<kbd>C-S-v</kbd> にした</span></td></tr>
 <tr><td>文字種</td><td>読み入力中と同じ</td><td>4.2 と同じ</td><td><span class="s plan">案</span></td></tr>
 <tr><td>候補（予測候補の選択中だけ）</td><td>選んでいる予測候補を履歴から消す</td><td><kbd>C-S-d</kbd> <kbd>C-Delete</kbd></td><td><span class="s ok">決定</span><br><span class="note">Macのノートでは <kbd>C-Delete</kbd>（Ctrl+fn+Delete）が押せなかったので、<kbd>C-S-d</kbd> を追加した（P3(b)。2026-11-13）</span></td></tr>
-<tr><td>確定</td><td>先頭の文節だけを確定する（残りの文節は変換中のまま）</td><td>?（案: <kbd>C-S-m</kbd> と、P6により <kbd>S-Enter</kbd>）</td><td><span class="s open">未定</span></td></tr>
+<tr><td>確定</td><td>先頭の文節だけを確定する（残りの文節は変換中のまま）</td><td><kbd>C-S-m</kbd> <kbd>S-Enter</kbd> <kbd>C-S-Enter</kbd></td><td><span class="s ok">決定</span><br><span class="note">あまり使わない操作なので Ctrl+Shift（P3(b)）。<kbd>C-m</kbd>≡Enter なので <kbd>C-S-m</kbd>≡<kbd>S-Enter</kbd> とそろえる（P6）。サジェスト表示中の <kbd>S-Enter</kbd>（先頭の候補を確定）とも「Shift+確定 = 先頭だけ確定」で意味がそろう。<kbd>C-S-m</kbd> で先頭の文節だけが確定することを実機で確認した。<kbd>C-S-m</kbd> からの類推で <kbd>C-S-Enter</kbd> を押したら動かなかったので、これも追加した（2026-11-13）</span></td></tr>
 </table>
 
 <h3>4.4 候補ウィンドウが出ている間（Suggestion / Prediction）</h3>

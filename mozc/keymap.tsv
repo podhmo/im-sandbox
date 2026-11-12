@@ -88,6 +88,12 @@ Conversion	ON	IMEOn
 Conversion	Enter	Commit
 Conversion	Ctrl m	Commit
 Conversion	VirtualEnter	CommitOnlyFirstSegment
+# 先頭の文節だけ確定 (P3(b): あまり使わない操作)。P6 により C-S-m と Shift Enter を同じにする。
+# Suggestion の Shift Enter (先頭のサジェスト候補を確定) と「Shift + 確定 = 先頭だけ確定」でそろう
+Conversion	Ctrl Shift m	CommitOnlyFirstSegment
+Conversion	Shift Enter	CommitOnlyFirstSegment
+# C-S-m からの類推で押されやすいので C-S-Enter も同じにする
+Conversion	Ctrl Shift Enter	CommitOnlyFirstSegment
 # 戻る
 Conversion	ESC	Cancel
 Conversion	Ctrl g	Cancel

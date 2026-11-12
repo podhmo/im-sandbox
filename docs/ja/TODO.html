@@ -34,12 +34,12 @@ ul.todo > li.done::before { content: "☑"; color: var(--done); }
 <li class="done"><kbd>C-S-b</kbd>/<kbd>C-S-f</kbd> を同じ操作をする別のキーとして残す <span class="ref">→ 4.3</span></li>
 <li class="done">kotoeri.tsv への追記をやめ、キーマップ全体を自分で書く（P5） <span class="ref">→ 2</span></li>
 <li class="done">読み入力中の <kbd>C-n</kbd> は予測変換に入る（<code>PredictAndConvert</code>） <span class="ref">→ 3</span></li>
-<li>読み入力中の <kbd>C-p</kbd> に何か割り当てるか <span class="ref">→ 4.2</span></li>
+<li class="done">読み入力中の <kbd>C-p</kbd> には何も割り当てない <span class="ref">→ 4.2</span></li>
 <li class="done">確定の取り消しは <kbd>C-g</kbd>（と <kbd>C-Backspace</kbd>）で試す <span class="ref">→ 4.1</span></li>
 <li class="done">再変換は <kbd>C-S-Space</kbd> で試す。IMEオフでは定義しない <span class="ref">→ 4.1</span></li>
 <li class="done">文字種はSKKに寄せて <kbd>C-j</kbd>/<kbd>C-q</kbd>/<kbd>C-l</kbd> で試す <span class="ref">→ 4.2</span></li>
 <li class="done">候補のページ送りは <kbd>C-v</kbd>/<kbd>C-S-v</kbd> <span class="ref">→ 4.3</span></li>
-<li>先頭の文節だけを確定する <code>CommitOnlyFirstSegment</code> にキーを割り当てるか <span class="ref">→ 4.3</span></li>
+<li class="done">先頭の文節だけを確定する <code>CommitOnlyFirstSegment</code> を <kbd>C-S-m</kbd> / <kbd>S-Enter</kbd> に割り当てる <span class="ref">→ 4.3</span></li>
 <li class="done">読み入力中の <kbd>Tab</kbd> と <kbd>C-i</kbd> も予測変換にする（P6） <span class="ref">→ 4.4</span></li>
 <li>F6〜F10、<kbd>Eisu</kbd>、<kbd>Hankaku/Zenkaku</kbd> など、Ctrl系以外のキーをどこまで引き継ぐか</li>
 <li>Suggestion / Prediction に独自の定義を持たせないという方針でよいか <span class="ref">→ 4.4</span></li>
@@ -59,6 +59,8 @@ ul.todo > li.done::before { content: "☑"; color: var(--done); }
 
 <h2>確かめること（macOS）</h2>
 <ul class="todo">
+<li class="done">変換中の <kbd>S-Enter</kbd> と <kbd>C-S-Enter</kbd> で先頭の文節だけが確定するか（→ 4.3）。動いた</li>
+<li class="done">変換中に <kbd>C-S-m</kbd> / <kbd>S-Enter</kbd> で先頭の文節だけが確定するか（例: 「ここではきものをぬぐ」）（→ 4.3）。<kbd>C-S-m</kbd> で確定した（<kbd>S-Enter</kbd> は未確認）</li>
 <li class="done">予測候補の選択中に <kbd>C-S-d</kbd> で候補が履歴から消えるか（例: 「１２３４５−」）（→ 4.3）。消えた（候補は「12345-」だけになった）</li>
 <li class="done">「-」だけを打って「ー」になった状態で <kbd>C-l</kbd> を押すと「-」になるか。変換中に押したときはどうなるか（→ 4.5）。「-」になった</li>
 <li class="done">「2026-11-13」の「-」が ASCII になるか。IMEオンで打つ <kbd>+</kbd> <kbd>=</kbd> <kbd>*</kbd> が半角になるか（→ 4.5）。なった（「2026-11-13」「1+2+3+4=2*5=10」）</li>
