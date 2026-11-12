@@ -252,7 +252,38 @@ killall GoogleJapaneseInputConverter 2>/dev/null || killall MozcConverter 2>/dev
 - macOSのクライアント（`Mozc.app` / IMKコントローラー）は、入力モードを切り替えるときなどに `GetConfig` でサーバーから設定を取得する。キーマップの解釈はサーバー側で行われるので、サーバーを再起動すれば反映される見込み（要検証）。
 - 壊れたファイルを置いた場合は、エラーにならずデフォルト設定に戻る。キーマップが効かないときは、まずデコードして中身を確認する。
 
+## 学習データの消去（GUIを使わない）
+
+GUIの「履歴を消去」ボタン（`ConfigDialog::ClearUserHistory`）は、変換サーバーに次の2つのコマンドを送っている。
+
+| コマンド | 処理 | 消える学習 | ファイル |
+| --- | --- | --- | --- |
+| `CLEAR_USER_HISTORY` | `Engine::ClearUserHistory()` → すべてのrewriterの `Clear()` | 候補の学習（`user_segment_history_rewriter`） | `segment.db` |
+| | | 文節区切りの学習（`user_boundary_history_rewriter`） | `boundary.db` |
+| | | 全角/半角の学習（`variants_rewriter` → `CharacterFormManager`） | `cform.db` |
+| `CLEAR_USER_PREDICTION` | `Engine::ClearUserPrediction()` → `predictor().ClearAllHistory()` | 予測入力の履歴（`user_history_predictor`） | `.history.db`（`.encrypt_key.db` で暗号化） |
+
+GUIを使わずに消す方法は2つ考えられる。
+
+1. **サーバーを止めてファイルを退避する**（`mozc/clear-learning.sh`）。サーバーはファイルがなければ新しく作る。
+   - 消す対象: `segment.db` `boundary.db` `cform.db` `.history.db`
+   - 残すもの: `config1.db` `user_dictionary.db` `.encrypt_key.db`
+   - 注意点:
+     - サーバーが動いたままだと、メモリ上の学習がファイルに書き戻される可能性がある。そのため、先にサーバーを止める。
+     - 止めた直後にIMEを使うと、サーバーがオンデマンドで起動して古いデータを読み込む可能性がある。そのため、退避した後にもう一度止める。
+   - 更新時刻について: 学習されているはずなのに、`segment.db` / `boundary.db` の更新時刻が作成時から変わっていなかった。
+     - これらは `storage/lru_storage.cc` の `LruStorage` が **mmap** で書き込んでいる。mmap経由の書き込みでは、更新時刻が更新されないことがある。
+     - 退避したファイルと新しく作られたファイルを比べると、退避した方には学習データが入っていた（0でないバイト数: `segment.db` 254 対 7、`boundary.db` 59 対 7、`cform.db` 31 対 6）。
+     - つまり、**更新時刻が古くても、学習データはファイルに入っている**。
+   - 実行結果（2026-11-13）: 4ファイルを退避した後、サーバーがオンデマンドで起動し、`segment.db` / `boundary.db` / `cform.db` を新しく作った。`.history.db` は、次に予測履歴を記録するまで作られない。
+2. **IPCで `CLEAR_USER_HISTORY` / `CLEAR_USER_PREDICTION` を送る**。GUIと同じ処理になる。ただし、macOSのMach IPCでMozcのプロトコルを話すクライアントが必要になる（Mozcをビルドするか、自作する）。今回は見送った。
+
+特定の予測候補だけを消したい場合は、予測候補を選んでいる状態（Prediction）で `Ctrl Delete`（`DeleteSelectedCandidate`）を押す。ただし、これで消えるのは予測入力の履歴だけで、文節区切りの学習などは残る。
+
+テストによる学習の汚染を防ぐ方法は、[mozc-e2e-mac.md](./mozc-e2e-mac.md) の `NO_HISTORY` の項を参照。
+
 ## 未検証・今後確認すること
+- [x] `mozc/clear-learning.sh` で学習が実際に消えるか → 消えた。消去後に `ここではきものをぬぐ` を変換すると、文節は `ここでは|着物を|ぬぐ` になり、最後の文節の第1候補は `脱ぐ` だった（消去前は `ぬ|グ` で区切られていた）
 
 - [x] Google日本語入力（brew版）で、上記パスの `config1.db` の差し替えとプロセスの再起動だけで反映されるか → 反映された（`mozc/apply.sh`）
 - [x] Google日本語入力の変換プロセスの実際の名前 → `GoogleJapaneseInputConverter`（3.34.6260で確認）
