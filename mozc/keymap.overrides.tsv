@@ -1,0 +1,6 @@
+# kotoeri.tsv (macOS既定) の末尾に連結される差分。同じ状態・キーは後の行が勝つ。
+# 書式: 状態<TAB>キー<TAB>コマンド
+Conversion	Ctrl e	SegmentFocusLast
+Conversion	Ctrl g	Cancel
+Conversion	Ctrl Shift b	SegmentWidthShrink
+Conversion	Ctrl Shift f	SegmentWidthExpand

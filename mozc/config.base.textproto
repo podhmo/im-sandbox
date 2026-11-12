@@ -1,0 +1,4 @@
+# キーマップ以外の設定 (mozc.config.Config の textproto)。
+# session_keymap / custom_keymap_table は build.sh が付け足すので書かない。
+# 例:
+# preedit_method: ROMAN
