@@ -20,10 +20,7 @@ Precomposition	Eisu	ToggleAlphanumericMode
 Precomposition	Space	InsertSpace
 Precomposition	Shift Space	InsertAlternateSpace
 Precomposition	Backspace	Revert
-# 確定の取り消し: 確定直後だけ効く。取り消すものが無ければキーはアプリへ渡る (session.cc RequestUndo の EchoBack)
-# C-g はどの状態でも「1段階戻る」(P2)
-Precomposition	Ctrl g	Undo
-Precomposition	Ctrl Backspace	Undo
+# 確定の取り消し (Undo) は割り当てない。Enter で確定した後は macOS で効かず、確定直後の Ctrl キーを IME が消費するだけになるため
 # 再変換: アプリで選択中の文字列を変換し直す。選択が無ければ macOS では Undo を試す。キーは常に IME が消費する
 Precomposition	Ctrl Shift Space	Reconvert
 

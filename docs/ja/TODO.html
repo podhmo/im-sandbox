@@ -44,6 +44,7 @@ ul.todo > li.done::before { content: "☑"; color: var(--done); }
 <li>F6〜F10、<kbd>Eisu</kbd>、<kbd>Hankaku/Zenkaku</kbd> など、Ctrl系以外のキーをどこまで引き継ぐか</li>
 <li>Suggestion / Prediction に独自の定義を持たせないという方針でよいか <span class="ref">→ 4.4</span></li>
 <li class="done">P3を修正する: Ctrlだけでは対になるキーが取れない操作や、あまり使わない操作の主なキーにもCtrl+Shiftを使ってよい <span class="ref">→ 2</span></li>
+<li class="done">数字の後の「-」を ASCII の「-」にする（<code>"&lt;&gt;=+-/*"</code> のグループを半角にした。<kbd>+</kbd> <kbd>=</kbd> <kbd>*</kbd> なども半角になる） <span class="ref">→ 7 C14</span></li>
 <li>全角英数で表示するキー（例: <kbd>C-S-l</kbd>）を追加するか（→ 7 C13）</li>
 <li>英字・記号の全角 / 半角をどうするか（数字だけ半角にした） <span class="ref">→ 4.5</span></li>
 </ul>
@@ -58,13 +59,17 @@ ul.todo > li.done::before { content: "☑"; color: var(--done); }
 
 <h2>確かめること（macOS）</h2>
 <ul class="todo">
-<li>IMEオンで Space が半角、<kbd>S-Space</kbd> が全角の空白になるか（→ 4.5）</li>
-<li>「3.14」「1,000」が半角だけで入るか（→ 4.5, 7 C14）</li>
-<li>「3.14」「2026-11-13」「1,000」と打って、記号が全角で混ざらないか（→ 7 C14）</li>
-<li>予測候補の選択中に Tab（文節を縮める）を押すとどうなるか（→ 7 C3）</li>
-<li>予測候補がまったくない読みで <kbd>C-n</kbd> を押すとどうなるか（→ 7 C9）</li>
+<li class="done">「-」だけを打って「ー」になった状態で <kbd>C-l</kbd> を押すと「-」になるか。変換中に押したときはどうなるか（→ 4.5）。「-」になった</li>
+<li class="done">「2026-11-13」の「-」が ASCII になるか。IMEオンで打つ <kbd>+</kbd> <kbd>=</kbd> <kbd>*</kbd> が半角になるか（→ 4.5）。なった（「2026-11-13」「1+2+3+4=2*5=10」）</li>
+<li class="done">IMEオンで Space が全角、<kbd>S-Space</kbd> が半角の空白になるか（→ 4.5）。なった</li>
+<li class="done">「3.14」「1,000」が半角だけで入るか（→ 4.5, 7 C14）。どちらも混ざらなくなった</li>
+<li class="done">「2026-11-13」と打って、「-」が全角で混ざらないか（→ 7 C14）。ASCIIの「-」ではなく「−」（U+2212 MINUS SIGN）になった</li>
+
+<li class="done">予測候補の選択中に Tab（文節を縮める）を押すとどうなるか（→ 7 C3）。変換を始める前の状態に戻ったように見えた</li>
+<li class="done">予測候補がまったくない読みで <kbd>C-n</kbd> を押すとどうなるか（→ 7 C9）。予測候補がまったくない読みが見つからなかったので、気にしなくてよさそう</li>
 <li class="done">IMEオンで数字を打つと、読み入力中も変換後も半角になるか（例: 「2026ねん」→「2026年」）。なった。<kbd>C-j</kbd> でも半角のまま（→ 7 C13）</li>
-<li>確定した直後に <kbd>C-g</kbd> を押すと確定が取り消されるか。確定直後でなければ、<kbd>C-g</kbd> がアプリに渡るか（TextEdit・ブラウザー・Emacs）</li>
+<li class="done">確定の取り消し: Enterで確定する前は <kbd>C-g</kbd> で戻るが、Enterで確定した後の <kbd>C-g</kbd> では戻らなかった。そういうものとして受け入れる（→ article 7 C1）</li>
+<li class="done">入力文字なしの <kbd>C-g</kbd> と <kbd>C-Backspace</kbd> から確定の取り消しを外す（→ article 4.1, 7 C1）</li>
 <li><kbd>C-S-Space</kbd> がIMEに届くか。macOSやアプリのショートカットと衝突しないか（Windows/LinuxのVS Codeでは、パラメーターヒントの表示に使われている）</li>
 <li><kbd>C-j</kbd>/<kbd>C-q</kbd>/<kbd>C-l</kbd> と <kbd>C-v</kbd>/<kbd>C-S-v</kbd> を実機で試す</li>
 <li class="done">叩き台（<code>mozc/keymap.tsv</code>）を実機で使い、変換中に <kbd>C-i</kbd>/<kbd>C-o</kbd> と <kbd>C-S-b</kbd>/<kbd>C-S-f</kbd> で文節を伸縮して打ち比べる（→ P3, 4.3）。<kbd>C-S-f</kbd> は一手間かかり、これだけに頼るのは厳しかった</li>
@@ -77,7 +82,13 @@ ul.todo > li.done::before { content: "☑"; color: var(--done); }
 <li>取り消せる確定がないときに <code>Undo</code> のキーを押すと、そのキーはアプリに渡るか（ソース上はそう読める）</li>
 <li>選択している文字列がないときに <code>Reconvert</code> のキーを押すと、そのキーはアプリに渡るか</li>
 <li>読み入力中の <kbd>C-n</kbd> を、サジェスト候補が出ているときと出ていないときの両方で試し、挙動の差がなくなったか</li>
-<li>変換中に <kbd>C-g</kbd> を2回押すと、読みが破棄されて入力文字なしに戻るか</li>
+<li class="done">変換中に <kbd>C-g</kbd> を2回押すと、読みが破棄されて入力文字なしに戻るか。変換中は読み入力中に戻り、読み入力中は読みが消えた</li>
+</ul>
+
+<h2>IMEの外（OS・アプリ側）でやること</h2>
+<ul class="todo">
+<li>undo / redo をEmacs風のキー（例: <kbd>C-/</kbd>）にするか。macOSのCocoaアプリなら <code>DefaultKeyBinding.dict</code> で <code>undo:</code> / <code>redo:</code> を割り当てて試す（→ article 7 C18）</li>
+<li class="done">範囲選択中に <kbd>C-g</kbd> で選択を解除する → 諦めた（article 7 C17）</li>
 </ul>
 
 <h2>確かめること（Linux / WSLg / Windows）</h2>

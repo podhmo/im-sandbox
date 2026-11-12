@@ -5,10 +5,12 @@
 
 # 文字幅のルール (character_form_rules)。
 # 1つでも書くと Mozc の既定ルール (config_handler.cc の CreateDefaultConfig) は使われないので、全グループを書く。
-# 既定から変えたのは次の2つ: 読み入力中も変換後も半角にする。
+# 既定から変えたのは次の3つ: 読み入力中も変換後も半角にする。
 #   "0"  : 数字
 #   ".," : 数字の後の「。」「、」が置き換わる「．」「，」(「3.14」「1,000」が全角と混ざらないように)。
 #          ふつうに打つ「。」「、」は "。、" グループなので影響しない
+#   "<>=+-/*" : 数字の後の「ー」が置き換わる「−」(U+2212, Mozc では「-」の全角形) を ASCII の「-」にする。
+#          IME オンで打つ + = * < > なども半角になる
 # preedit = 読み入力中の表示, conversion = 変換後 (LAST_FORM は前回選んだ幅を学習して使う)
 character_form_rules { group: "ア" preedit_character_form: FULL_WIDTH conversion_character_form: FULL_WIDTH }
 character_form_rules { group: "A" preedit_character_form: FULL_WIDTH conversion_character_form: LAST_FORM }
@@ -21,8 +23,8 @@ character_form_rules { group: "\"'" preedit_character_form: FULL_WIDTH conversio
 character_form_rules { group: ":;" preedit_character_form: FULL_WIDTH conversion_character_form: LAST_FORM }
 character_form_rules { group: "#%&@$^_|`\\" preedit_character_form: FULL_WIDTH conversion_character_form: LAST_FORM }
 character_form_rules { group: "~" preedit_character_form: FULL_WIDTH conversion_character_form: LAST_FORM }
-character_form_rules { group: "<>=+-/*" preedit_character_form: FULL_WIDTH conversion_character_form: LAST_FORM }
+character_form_rules { group: "<>=+-/*" preedit_character_form: HALF_WIDTH conversion_character_form: HALF_WIDTH }
 character_form_rules { group: "?!" preedit_character_form: FULL_WIDTH conversion_character_form: LAST_FORM }
 
-# 空白は IME オンでも半角にする。全角空白はめったに使わないので Shift Space (InsertAlternateSpace = 逆の幅) で入れる
-space_character_form: FUNDAMENTAL_HALF_WIDTH
+# 空白は既定のまま (space_character_form を書かない): IME オン (ひらがな) では Space で全角、Shift Space で半角。
+# Shift は「逆・もう一方」(Shift Space=前の候補, Shift Tab=前の候補, C-S-v=前のページ) で、Shift で全角になるキーは他に無いため

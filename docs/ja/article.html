@@ -67,7 +67,7 @@ Mozcの既定キーマップ（kotoeri.tsv）は参考にするが、従う必�
 <tr><td>読み入力中</td><td>読みを破棄する（→ 入力文字なし）</td><td><kbd>C-g</kbd> <kbd>ESC</kbd></td><td><span class="s plan">案</span></td></tr>
 <tr><td>読み入力中</td><td>最後の1文字を消すと、入力文字なしに戻る</td><td><kbd>C-h</kbd> <kbd>C-d</kbd></td><td><span class="s plan">案</span></td></tr>
 </table>
-<p class="note">変換中に <kbd>C-g</kbd> を2回押すと、読みの破棄まで戻る。Emacsで <kbd>C-g</kbd> を連打したときの感覚と同じになる。</p>
+<p class="note">変換中に <kbd>C-g</kbd> を2回押すと、読みの破棄まで戻る。Emacsで <kbd>C-g</kbd> を連打したときの感覚と同じになる。変換中の <kbd>C-g</kbd> で読み入力中に戻ること、読み入力中の <kbd>C-g</kbd> で読みが消えることは、実機で確認した（2026-11-13）。</p>
 
 <h2>4. 状態の中での操作</h2>
 
@@ -75,7 +75,7 @@ Mozcの既定キーマップ（kotoeri.tsv）は参考にするが、従う必�
 <table>
 <tr><th>状況</th><th>挙動</th><th>キー</th><th>状態</th></tr>
 <tr><td>Ctrl系のキーを押した</td><td>アプリに渡す（Emacs風の行移動などはアプリやOSが処理する）</td><td>すべてのCtrlキー</td><td><span class="s plan">案</span></td></tr>
-<tr><td>確定した直後に、その確定を取り消したい</td><td>確定前の変換中に戻る。取り消せる確定がなければ、キーはアプリに渡る</td><td><kbd>C-g</kbd> <kbd>C-Backspace</kbd></td><td><span class="s plan">案</span><br><span class="note">P4の例外として認める（取り消すものが無ければキーはアプリに渡る。Mozcの <code>session.cc</code> の <code>RequestUndo</code> がキーを送り返すため）。<kbd>C-g</kbd> がどの状態でも「1段階戻る」になる（P2）。実機ではまだ確かめていない</span></td></tr>
+<tr><td>確定した直後に、その確定を取り消したい</td><td>IMEでは扱わない（アプリの取り消し、macOSなら <kbd>Cmd-z</kbd> を使う）。<kbd>C-g</kbd> は入力文字なしの状態では何もせず、アプリに渡す</td><td>なし</td><td><span class="s ok">決定</span><br><span class="note">一度 <kbd>C-g</kbd> と <kbd>C-Backspace</kbd> に確定の取り消し（<code>Undo</code>）を割り当てたが、Enterで確定した後は効かなかったので外した（2026-11-13。C1）</span></td></tr>
 <tr><td>アプリで選択している文字列を変換し直したい</td><td>再変換する（変換中に入る）</td><td><kbd>C-S-Space</kbd></td><td><span class="s plan">案</span><br><span class="note">再変換は、選択している文字列がなくてもキーをIMEが消費する（macOSでは代わりに確定の取り消しを試す）。そのため、IMEオフの状態では定義しない。ほかのショートカットと衝突しないかは、まだ確かめていない</span></td></tr>
 </table>
 
@@ -109,7 +109,10 @@ Mozcの既定キーマップ（kotoeri.tsv）は参考にするが、従う必�
 <tr><th>状況</th><th>挙動</th><th>設定</th><th>状態</th></tr>
 <tr><td>IMEオン（ひらがな入力）で数字 <kbd>0</kbd>〜<kbd>9</kbd> を打った</td><td>読み入力中も変換後も<strong>半角</strong>にする</td><td><code>mozc/config.base.textproto</code> の <code>character_form_rules</code> で、<code>"0"</code> のグループを <code>HALF_WIDTH</code> にする</td><td><span class="s plan">案</span><br><span class="note">ルールを1つでも書くとMozcの既定のルールが使われなくなるため、ほかのグループは既定と同じ値で書き並べている。実機ではまだ確かめていない</span></td></tr>
 <tr><td>数字の後に「.」「,」を打った（例: 3.14、1,000）</td><td>半角にする（全角の「．」「，」が混ざらないようにする）</td><td><code>".,"</code> のグループを <code>HALF_WIDTH</code> にする。ふつうに打つ「。」「、」は別のグループ（<code>"。、"</code>）なので全角のまま</td><td><span class="s plan">案</span><br><span class="note">既定の設定では「3．14」「1，000」と混ざることを実機で確認した（2026-11-13）</span></td></tr>
-<tr><td>IMEオン（入力文字なし）で Space を打った</td><td><strong>半角</strong>の空白。全角の空白は、めったに使わないので <kbd>S-Space</kbd></td><td><code>space_character_form: FUNDAMENTAL_HALF_WIDTH</code>。<code>Precomposition	Shift Space	InsertAlternateSpace</code>（設定と逆の幅の空白を入れる）</td><td><span class="s ok">決定</span><br><span class="note">「全角の空白を打ってから <kbd>C-l</kbd> で半角にする」はできない。入力文字なしの状態で打った空白は、読み入力中に入らずすぐ確定する（半角ならアプリにそのまま渡る）ため、<kbd>C-l</kbd> を当てる対象が残らない（<code>session.cc</code> の <code>InsertSpace*</code>）</span></td></tr>
+<tr><td>IMEオン（入力文字なし）で Space を打った</td><td><strong>全角</strong>の空白（Mozcの既定のまま）。半角の空白は <kbd>S-Space</kbd></td><td><code>space_character_form</code> は書かない（既定）。<code>Precomposition	Shift Space	InsertAlternateSpace</code>（設定と逆の幅の空白を入れる）</td><td><span class="s ok">決定</span><br><span class="note">一度は「既定は半角、<kbd>S-Space</kbd> で全角」にしたが、Shiftを付けると全角になるキーはほかに無いので戻した（2026-11-13）。このキーマップでのShiftは「逆・もう一方」を表す（<kbd>S-Space</kbd>・<kbd>S-Tab</kbd> で前の候補、<kbd>C-S-v</kbd> で前のページ、<kbd>S-←</kbd>/<kbd>S-→</kbd> で範囲）。
+「全角の空白を打ってから <kbd>C-l</kbd> で半角にする」はできない（C19）</span></td></tr>
+<tr><td>数字の後に「-」を打った（例: 2026-11-13）、IMEオンで <kbd>+</kbd> <kbd>=</kbd> <kbd>*</kbd> <kbd>&lt;</kbd> <kbd>&gt;</kbd> を打った</td><td>ASCIIの半角にする</td><td><code>"&lt;&gt;=+-/*"</code> のグループを <code>HALF_WIDTH</code> にする</td><td><span class="s ok">決定</span><br><span class="note">既定では、数字の後の「-」は U+2212 MINUS SIGN になる（C14）</span></td></tr>
+<tr><td>数字の後以外で「-」をASCIIで入れたい</td><td>「-」を打つと「ー」になるので、続けて <kbd>C-l</kbd>（半角英数で表示）を押して「-」にする。<code>-</code> キーのまま「-」を出す設定にはしない（長音の「ー」が打てなくなるため）</td><td>キーマップのまま（<kbd>C-l</kbd> = <code>DisplayAsHalfAlphanumeric</code>）</td><td><span class="s plan">案</span><br><span class="note">半角英数は、表示中の文字ではなく打ったキーそのもの（<code>raw</code>）から作られる（<code>composer/transliterators.cc</code> の <code>HalfAsciiTransliterator</code>）。そのため読み全体が対象になり、「らーめん」で押すと「ra-men」になる。実機ではまだ確かめていない</span></td></tr>
 <tr><td>英字・記号を打った</td><td>Mozcの既定のまま（読み入力中は全角、変換後は前回選んだ幅）</td><td>同上</td><td><span class="s open">未定</span></td></tr>
 </table>
 
@@ -123,7 +126,7 @@ Mozcの既定キーマップ（kotoeri.tsv）は参考にするが、従う必�
 <tr><td><kbd>C-n</kbd></td><td>アプリ</td><td>予測変換 → 変換中</td><td>次の候補</td><td>下へ・進む</td></tr>
 <tr><td><kbd>C-p</kbd></td><td>アプリ</td><td>（なし）</td><td>前の候補</td><td>上へ</td></tr>
 <tr><td><kbd>C-m</kbd></td><td>アプリ</td><td>確定 → 入力文字なし</td><td>確定 → 入力文字なし</td><td>抜ける</td></tr>
-<tr><td><kbd>C-g</kbd></td><td>確定の取り消し → 変換中（確定直後のみ。それ以外はアプリ）</td><td>破棄 → 入力文字なし</td><td>取り消し → 読み入力中</td><td>戻る</td></tr>
+<tr><td><kbd>C-g</kbd></td><td>アプリ</td><td>破棄 → 入力文字なし</td><td>取り消し → 読み入力中</td><td>戻る</td></tr>
 <tr><td><kbd>C-j</kbd>/<kbd>C-q</kbd>/<kbd>C-l</kbd></td><td>アプリ</td><td>ひらがな / 全角カタカナ / 半角英数で表示</td><td>同じ</td><td>文字種</td></tr>
 <tr><td><kbd>C-v</kbd>/<kbd>C-S-v</kbd></td><td>アプリ</td><td>（なし）</td><td>次 / 前の候補ページ</td><td>ページ</td></tr>
 <tr><td><kbd>C-h</kbd></td><td>アプリ</td><td>前の文字を削除</td><td>取り消し → 読み入力中</td><td>後退</td></tr>
@@ -148,14 +151,14 @@ Mozcの既定キーマップ（kotoeri.tsv）は参考にするが、従う必�
 <tr><td>C1</td><td>入力文字なしの <kbd>C-g</kbd>（確定の取り消し）</td>
   <td>確定した直後に限って、アプリの <kbd>C-g</kbd> ではなく確定の取り消しになる。たとえばEmacsで確定直後に <kbd>keyboard-quit</kbd> のつもりで押すと、確定が取り消される。
   確定の取り消しは、取り消せる状態のあいだはキーを消費する。アプリが直前の文字の削除に対応していない場合（macOSでは選択範囲を返さないアプリ）は、何も起きずにキーだけが消える可能性がある</td>
-  <td>試行中。実機で確かめる</td></tr>
+  <td><span class="s ok">決定</span> Enterで確定した後は効かなかった（変換中に一部だけ確定した後は戻った）。確定直後の <kbd>C-g</kbd> がアプリに渡らなくなる害のほうが大きいので、入力文字なしの状態の <kbd>C-g</kbd> と <kbd>C-Backspace</kbd> から確定の取り消しを外した（2026-11-13）</td></tr>
 <tr><td>C2</td><td><kbd>C-S-Space</kbd>（再変換）</td>
   <td>再変換は、選択している文字列がなくてもIMEがキーを消費する。そのため、IMEオンの間はアプリの <kbd>C-S-Space</kbd> が使えなくなる（例: Windows/LinuxのVS Codeのパラメーターヒント）。macOSでは、選択がないと確定の取り消しを試す</td>
   <td>IMEオフでは定義しない。衝突するアプリが見つかったら考え直す</td></tr>
 <tr><td>C3</td><td>Tab の意味が状態によって変わる</td>
   <td>読み入力中のTabは予測変換、変換中のTabは「文節を縮める」（P6で <kbd>C-i</kbd> とそろえたため）。kotoeri.tsv では、変換中のTabは次の候補だった。
-  予測候補の選択中（Prediction）も変換中の定義を引き継ぐので、Tabは「縮める」になる。予測候補に対して縮めるとどうなるかは確かめていない</td>
-  <td>試行中。違和感があれば見直す</td></tr>
+  予測候補の選択中（Prediction）も変換中の定義を引き継ぐので、Tabは「縮める」になる。予測候補の選択中に縮めると、変換を始める前の状態に戻ったように見えた（実機で確認）。Mozcのソース（<code>engine/engine_converter.cc</code> の <code>ResizeSegmentWidth</code>）では、予測候補の選択中は文節の伸縮をせず、候補ウィンドウを閉じるだけになっている</td>
+  <td>試行中。予測候補の選択中のTabは実害が少ないので、ひとまずこのまま</td></tr>
 <tr><td>C4</td><td>区別できない可能性のあるキーの組（<kbd>C-i</kbd>/Tab、<kbd>C-m</kbd>/Enter、<kbd>C-h</kbd>/Backspace）</td>
   <td>macOSでは区別できる。Fcitx5（Linux / WSLg）とWindowsでは確かめていない。P6で同じ意味にそろえているので、区別できなくても挙動は変わらない想定</td>
   <td>未確認</td></tr>
@@ -172,8 +175,8 @@ Mozcの既定キーマップ（kotoeri.tsv）は参考にするが、従う必�
   <td>キーボードの配列によって押し方が変わる（US配列では <kbd>:</kbd> にShiftが要る）。ことえり由来で残しているだけ</td>
   <td>そのまま</td></tr>
 <tr><td>C9</td><td>読み入力中の <kbd>C-n</kbd>（予測変換）</td>
-  <td>予測候補がまったくないときにどう動くか（通常の変換になるのか、何も起きないのか）を確かめていない</td>
-  <td>未確認</td></tr>
+  <td>予測候補がまったくないときにどう動くか確かめようとしたが、そういう読みが見つからなかった。ソース（<code>session.cc</code> の <code>PredictAndConvert</code>）では、予測できなければ読み入力中のまま何も変わらない</td>
+  <td>気にしなくてよい</td></tr>
 <tr><td>C10</td><td>文字幅のルール（4.5）</td>
   <td>ルールを1つでも書くと、Mozcの既定のルールは使われない。将来Mozcの既定が変わっても、こちらには反映されない。英字・記号の <code>LAST_FORM</code> は学習データ（<code>cform.db</code>）を使うので、学習を消すと挙動が変わる</td>
   <td>既定と同じ値を書き並べている</td></tr>
@@ -181,18 +184,38 @@ Mozcの既定キーマップ（kotoeri.tsv）は参考にするが、従う必�
   <td>Google日本語入力の設定画面で「OK」を押すと、手で置いた <code>config1.db</code> が上書きされ、このキーマップが消える</td>
   <td>設定画面を使わない運用にする（未定）</td></tr>
 <tr><td>C12</td><td>Emacs自身の上で使うとき</td>
-  <td>入力文字なしの状態ではキーがEmacsに渡るので、通常の編集には影響しない。ただし C1 のとおり、確定直後の <kbd>C-g</kbd> だけは挙動が変わる</td>
-  <td>C1と合わせて確かめる</td></tr>
+  <td>入力文字なしの状態ではキーがEmacsに渡るので、通常の編集には影響しない（C1で確定の取り消しを外したので、<kbd>C-g</kbd> も常にEmacsに渡る）</td>
+  <td>問題なし</td></tr>
 <tr><td>C13</td><td>数字を半角にした（4.5）と <kbd>C-j</kbd> / <kbd>C-q</kbd></td>
   <td><kbd>C-j</kbd>（ひらがなで表示）と <kbd>C-q</kbd>（全角カタカナで表示）では、数字は全角にならず半角のまま（2026-11-13に実機で確認）。
   Mozcのソース（<code>composer/transliterators.cc</code>）を読むと、この2つはいったん全角にした後で、4.5 の文字幅ルールを当て直しているため。文字幅ルールを使わず全角にするのは「全角英数で表示」（F9）だけ。変換候補の一覧にも全角の数字は出る</td>
   <td>仕様どおり。全角の数字をよく使うなら、全角英数で表示するキーを追加する（P3(b)により、例: <kbd>C-S-l</kbd>）</td></tr>
 <tr><td>C14</td><td>数字に続く <kbd>.</kbd> <kbd>,</kbd> <kbd>-</kbd>（4.5）</td>
-  <td>数字の後の「。」「、」「ー」は、読み入力中に「．」「，」「−」へ置き換えられる。既定の幅のルールのままだと、「3．14」「1，000」のように半角と全角が混ざる（実機で確認）。「-」（例: 2026-11-13）は確かめていない</td>
-  <td><code>".,"</code> を半角にした（4.5）。「-」は未確認</td></tr>
+  <td>数字の後の「。」「、」「ー」は、読み入力中に「．」「，」「−」へ置き換えられる。既定の幅のルールのままだと、「3．14」「1，000」のように半角と全角が混ざる（実機で確認）。
+  「-」は「09−2−22」のように <strong>U+2212 MINUS SIGN</strong> になる（実機で確認）。見た目は半角に近いが、ASCIIの「-」ではない。Mozcでは U+2212 が「-」の全角形として扱われていて、<code>"&lt;&gt;=+-/*"</code> のグループ（読み入力中は全角）のルールが当たっているため</td>
+  <td><code>".,"</code> を半角にした（4.5）。「3.14」「1,000」は混ざらなくなった（実機で確認）。「-」も <code>"&lt;&gt;=+-/*"</code> のグループを半角にしてASCIIにした（<kbd>+</kbd> <kbd>=</kbd> <kbd>*</kbd> なども半角になる）。実機ではまだ確かめていない</td></tr>
+
 <tr><td>C15</td><td><kbd>C-q</kbd> の意味</td>
   <td>Emacsの <kbd>C-q</kbd> は <code>quoted-insert</code>（次の1文字をそのまま入力する）。この意味で「<kbd>C-q</kbd> <kbd>.</kbd> で半角の . を入れる」ことはできない。Mozcのキーマップは1回のキー入力にしか割り当てられず、次の文字をそのまま入れるコマンドもないため。今は <kbd>C-q</kbd> を全角カタカナにしているので、Emacsの意味とは食い違う（P1）</td>
   <td>SKKに寄せることを優先して、そのまま</td></tr>
+
+<tr><td>C16</td><td>範囲選択して Space で再変換したい</td>
+  <td>今は <kbd>C-S-Space</kbd> で再変換できる（実機で確認）。Space で再変換するのはキーマップでは実現できない。IMEの変換サーバーはアプリの選択範囲を知らないので、「選択があるときだけ再変換、無いときは空白」という分岐ができない。
+  入力文字なしの Space を再変換にすると、選択が無いときに空白が入らなくなる（再変換は常にキーを消費し、macOSでは代わりに確定の取り消しを試すだけ）。今の Space は半角の空白をアプリに渡すので、選択範囲が空白で置き換わって消える</td>
+  <td><span class="s ok">決定</span> <kbd>C-S-Space</kbd> のまま。どうしても必要なら、OSS版のMozcのmacOSクライアント（<code>mozc_imk_input_controller.mm</code>）を改造し、選択があるときだけ Space を再変換にする方法がある</td></tr>
+<tr><td>C17</td><td>範囲選択中の <kbd>C-g</kbd> で選択を解除したい</td>
+  <td>選択の解除はIMEではなくアプリ側の操作（Q11）。入力文字なしの <kbd>C-g</kbd> は、取り消せる確定が無ければアプリに渡る。ただし、確定の直後に範囲を選択して <kbd>C-g</kbd> を押すと、選択の解除ではなく確定の取り消しになる（C1）。
+  macOSのCocoaアプリでは <code>DefaultKeyBinding.dict</code> で <kbd>C-g</kbd> にアクションを割り当てられるが、選択の解除だけをする標準のアクションは無さそう。たとえば <code>moveRight:</code> を割り当てると、選択があれば末尾で解除されるが、選択が無いときは1文字進んでしまう</td>
+  <td><span class="s ok">決定</span> IMEの設定では無理なので諦める（2026-11-13）。参考までに、残っている手段: macOSなら Hammerspoon などで、<kbd>C-g</kbd> を押したときにアクセシビリティAPIで選択範囲（<code>AXSelectedTextRange</code>）を調べ、選択があれば <kbd>→</kbd> を送って解除し、無ければ <kbd>C-g</kbd> をそのまま渡す。IMEの外の仕組みで、OSごとに別の実装になる</td></tr>
+<tr><td>C18</td><td>undo / redo のキー</td>
+  <td>IMEで指定できるのは「確定の取り消し」（<code>Undo</code>。入力文字なしでは <kbd>C-g</kbd>）だけ。Mozcに redo のコマンドは無い。
+  確定した後の文章の undo / redo はアプリ側の操作（Q11）。macOSでは <kbd>Cmd-z</kbd> / <kbd>Cmd-Shift-z</kbd> が標準。Emacs風に <kbd>C-/</kbd> などにしたい場合は、Cocoaアプリなら <code>DefaultKeyBinding.dict</code> で <code>undo:</code> / <code>redo:</code> を割り当てる（効くかは要確認）。
+  入力文字なしの <kbd>C-/</kbd> はIMEに定義していないので、アプリに渡る</td>
+  <td>IMEの外の作業としてTODOに載せた</td></tr>
+<tr><td>C19</td><td>空白を「既定は全角、<kbd>C-l</kbd> で半角」にしたい</td>
+  <td>実現できない。入力文字なしの状態で打った空白は、全角なら読み入力中に入らず、その場で確定する（<code>session.cc</code> の <code>InsertCharacter</code> が <code>CommitCompositionDirectly</code> を呼ぶ）。半角ならアプリにそのまま渡る。どちらも <kbd>C-l</kbd> を当てる対象が残らない。
+  Space を「読みの入力を始める文字」として扱わせる設定にすると、続けて打つ読みと空白がひとまとまりになり、2回目の Space で変換が始まってしまう</td>
+  <td><span class="s ok">決定</span> Space と <kbd>S-Space</kbd> で幅を分ける（Space が全角、<kbd>S-Space</kbd> が半角）</td></tr>
 
 </table>
 </body>
