@@ -45,7 +45,7 @@ ul.todo > li.done::before { content: "☑"; color: var(--done); }
 <li>Suggestion / Prediction に独自の定義を持たせないという方針でよいか <span class="ref">→ 4.4</span></li>
 <li class="done">P3を修正する: Ctrlだけでは対になるキーが取れない操作や、あまり使わない操作の主なキーにもCtrl+Shiftを使ってよい <span class="ref">→ 2</span></li>
 <li class="done">数字の後の「-」を ASCII の「-」にする（<code>"&lt;&gt;=+-/*"</code> のグループを半角にした。<kbd>+</kbd> <kbd>=</kbd> <kbd>*</kbd> なども半角になる） <span class="ref">→ 7 C14</span></li>
-<li>全角英数で表示するキー（例: <kbd>C-S-l</kbd>）を追加するか（→ 7 C13）</li>
+<li class="done">全角英数で表示するキーは追加しない。「-」が U+2212 になるなど混乱しやすいので、F9 だけにする（→ 7 C13）</li>
 <li>英字・記号の全角 / 半角をどうするか（数字だけ半角にした） <span class="ref">→ 4.5</span></li>
 </ul>
 
@@ -59,6 +59,7 @@ ul.todo > li.done::before { content: "☑"; color: var(--done); }
 
 <h2>確かめること（macOS）</h2>
 <ul class="todo">
+<li class="done">予測候補の選択中に <kbd>C-S-d</kbd> で候補が履歴から消えるか（例: 「１２３４５−」）（→ 4.3）。消えた（候補は「12345-」だけになった）</li>
 <li class="done">「-」だけを打って「ー」になった状態で <kbd>C-l</kbd> を押すと「-」になるか。変換中に押したときはどうなるか（→ 4.5）。「-」になった</li>
 <li class="done">「2026-11-13」の「-」が ASCII になるか。IMEオンで打つ <kbd>+</kbd> <kbd>=</kbd> <kbd>*</kbd> が半角になるか（→ 4.5）。なった（「2026-11-13」「1+2+3+4=2*5=10」）</li>
 <li class="done">IMEオンで Space が全角、<kbd>S-Space</kbd> が半角の空白になるか（→ 4.5）。なった</li>

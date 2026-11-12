@@ -97,6 +97,7 @@ Mozcの既定キーマップ（kotoeri.tsv）は参考にするが、従う必�
 <tr><td>候補</td><td>次の候補 / 前の候補</td><td><kbd>C-n</kbd> <kbd>C-p</kbd> <kbd>Space</kbd> <kbd>↓</kbd> <kbd>↑</kbd></td><td><span class="s plan">案</span></td></tr>
 <tr><td>候補</td><td>次のページ / 前のページ</td><td><kbd>C-v</kbd> <kbd>C-S-v</kbd>、<kbd>PageDown</kbd> <kbd>PageUp</kbd></td><td><span class="s ok">決定</span><br><span class="note">Emacsの <kbd>M-v</kbd> はP3でMetaを使わないため、<kbd>C-S-v</kbd> にした</span></td></tr>
 <tr><td>文字種</td><td>読み入力中と同じ</td><td>4.2 と同じ</td><td><span class="s plan">案</span></td></tr>
+<tr><td>候補（予測候補の選択中だけ）</td><td>選んでいる予測候補を履歴から消す</td><td><kbd>C-S-d</kbd> <kbd>C-Delete</kbd></td><td><span class="s ok">決定</span><br><span class="note">Macのノートでは <kbd>C-Delete</kbd>（Ctrl+fn+Delete）が押せなかったので、<kbd>C-S-d</kbd> を追加した（P3(b)。2026-11-13）</span></td></tr>
 <tr><td>確定</td><td>先頭の文節だけを確定する（残りの文節は変換中のまま）</td><td>?（案: <kbd>C-S-m</kbd> と、P6により <kbd>S-Enter</kbd>）</td><td><span class="s open">未定</span></td></tr>
 </table>
 
@@ -188,8 +189,8 @@ Mozcの既定キーマップ（kotoeri.tsv）は参考にするが、従う必�
   <td>問題なし</td></tr>
 <tr><td>C13</td><td>数字を半角にした（4.5）と <kbd>C-j</kbd> / <kbd>C-q</kbd></td>
   <td><kbd>C-j</kbd>（ひらがなで表示）と <kbd>C-q</kbd>（全角カタカナで表示）では、数字は全角にならず半角のまま（2026-11-13に実機で確認）。
-  Mozcのソース（<code>composer/transliterators.cc</code>）を読むと、この2つはいったん全角にした後で、4.5 の文字幅ルールを当て直しているため。文字幅ルールを使わず全角にするのは「全角英数で表示」（F9）だけ。変換候補の一覧にも全角の数字は出る</td>
-  <td>仕様どおり。全角の数字をよく使うなら、全角英数で表示するキーを追加する（P3(b)により、例: <kbd>C-S-l</kbd>）</td></tr>
+  Mozcのソース（<code>composer/transliterators.cc</code>）を読むと、この2つはいったん全角にした後で、4.5 の文字幅ルールを当て直しているため。文字幅ルールを使わず全角にするのは「全角英数で表示」（F9）だけ。「全角英数で表示」は、打ったキーそのもの（<code>raw</code>）を全角の英数字に置き換える（<code>FullAsciiTransliterator</code>）。そのため長音の「ー」にはならない。「12345-」は「１２３４５−」になり、「-」は U+2212 MINUS SIGN になる（実機で確認。U+FF0D 全角ハイフンマイナスではない。Mozcの全角化の表では「-」の全角形が U+2212 になっているため。C14と同じ）。変換候補の一覧にも全角の数字は出る</td>
+  <td><span class="s ok">決定</span> 仕様どおり。全角英数で表示するキーは追加しない（「-」が U+2212 になるなど混乱しやすいため）。必要なときは F9 を使う（2026-11-13）</td></tr>
 <tr><td>C14</td><td>数字に続く <kbd>.</kbd> <kbd>,</kbd> <kbd>-</kbd>（4.5）</td>
   <td>数字の後の「。」「、」「ー」は、読み入力中に「．」「，」「−」へ置き換えられる。既定の幅のルールのままだと、「3．14」「1，000」のように半角と全角が混ざる（実機で確認）。
   「-」は「09−2−22」のように <strong>U+2212 MINUS SIGN</strong> になる（実機で確認）。見た目は半角に近いが、ASCIIの「-」ではない。Mozcでは U+2212 が「-」の全角形として扱われていて、<code>"&lt;&gt;=+-/*"</code> のグループ（読み入力中は全角）のルールが当たっているため</td>

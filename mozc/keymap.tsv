@@ -143,4 +143,6 @@ Conversion	F10	DisplayAsHalfAlphanumeric
 
 # ---------------------------------------------------------------- Prediction (予測候補の選択中)
 # Conversion を引き継ぐ
+# 予測候補を履歴から消す。Mac のノートでは Ctrl+fn+Delete が押せないので C-S-d も割り当てる (P3(b): あまり使わない操作)
 Prediction	Ctrl Delete	DeleteSelectedCandidate
+Prediction	Ctrl Shift d	DeleteSelectedCandidate
