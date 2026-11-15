@@ -2,7 +2,7 @@
 # x11-shot -- capture the main X11 window of a running GUI process
 #
 # usage: tools/x11-shot <pid> <out.png>
-# exit:  0 captured / 1 window not found or capture failed / 2 missing tool
+# exit:  0 captured / 1 window not found or capture failed / 2 missing tool/usage
 #
 # emacs-sandbox tools/mac-shot の Linux(X11/XWayland) 版。
 # X11 クライアント (GDK_BACKEND=x11 の GTK アプリや XIM emacs) 用。
@@ -10,6 +10,7 @@
 #
 # 必要なもの: xdotool, maim  (sudo apt install xdotool maim)
 set -u
+[ $# -eq 2 ] || { echo "usage: x11-shot <pid> <out.png>" >&2; exit 2; }
 pid="$1"
 out="$2"
 
@@ -19,7 +20,8 @@ command -v maim    >/dev/null || { echo "x11-shot: maim not found" >&2; exit 2; 
 # その pid の一番大きい可視ウィンドウを探す
 wid=""
 best=0
-for w in $(xdotool search --pid "$pid" 2>/dev/null); do
+for w in $(xdotool search --onlyvisible --pid "$pid" 2>/dev/null); do
+    WIDTH=0; HEIGHT=0
     eval "$(xdotool getwindowgeometry --shell "$w" 2>/dev/null)" || continue
     area=$((WIDTH * HEIGHT))
     if [ "$area" -gt "$best" ]; then best=$area; wid=$w; fi

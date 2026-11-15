@@ -88,6 +88,19 @@ def wait_file(path, timeout=8.0, settle=0.4):
 LEARN_FILES = ["cform.db", "segment.db", "boundary.db", ".history.db"]
 
 
+def _kill_mozc():
+    """mozc_server を止めて消えるまで待つ (killall は非同期。
+
+    停止中の flush が学習ファイルを汚さないよう、kill してから
+    ファイルを動かすまでの間に待機を挟む)。"""
+    subprocess.run(["killall", "mozc_server"], stderr=subprocess.DEVNULL)
+    for _ in range(50):
+        if subprocess.run(["pgrep", "-x", "mozc_server"],
+                          capture_output=True).returncode != 0:
+            return
+        time.sleep(0.1)
+
+
 class Runner:
     """学習ファイルの退避と復元。
 
@@ -105,16 +118,29 @@ class Runner:
         self.mozc_dir = os.path.expanduser("~/.config/mozc")
         self.stash = os.path.join(self.tmp, "learning")
         os.makedirs(self.stash)
+        os.makedirs(self.mozc_dir, exist_ok=True)
+        # 前回残った probe (とその IC) がフォーカスを競合させるので掃除する。
+        # pkill -f は自分のコマンドライン (mozc_e2e_gui.py) にはマッチしない。
+        subprocess.run(["pkill", "-f", "gtk_im_probe.py"],
+                       stderr=subprocess.DEVNULL)
+        time.sleep(0.3)
+        _kill_mozc()
+        try:
+            for f in LEARN_FILES:
+                p = os.path.join(self.mozc_dir, f)
+                if os.path.exists(p):
+                    shutil.move(p, os.path.join(self.stash, f))
+        except Exception:
+            self.restore()
+            raise
+
+    def restore(self):
+        _kill_mozc()
+        # 実行中に生成された学習ファイルを消してから退避分を戻す
         for f in LEARN_FILES:
             p = os.path.join(self.mozc_dir, f)
             if os.path.exists(p):
-                shutil.move(p, os.path.join(self.stash, f))
-        subprocess.run(["killall", "mozc_server"],
-                       stderr=subprocess.DEVNULL)
-
-    def restore(self):
-        subprocess.run(["killall", "mozc_server"],
-                       stderr=subprocess.DEVNULL)
+                os.remove(p)
         for f in LEARN_FILES:
             src = os.path.join(self.stash, f)
             if os.path.exists(src):
@@ -145,17 +171,21 @@ class Runner:
                                 stdout=subprocess.DEVNULL,
                                 stderr=subprocess.DEVNULL)
 
-    def activate_window(self, timeout=10):
+    def activate_window(self, proc, timeout=10):
+        # --pid で自分の probe の窓だけに絞る (残骸の窓を掴まない)
         deadline = time.time() + timeout
         while time.time() < deadline:
-            r = subprocess.run(["xdotool", "search", "--name", "gtk-im-probe"],
-                               capture_output=True, text=True)
+            r = subprocess.run(
+                ["xdotool", "search", "--pid", str(proc.pid),
+                 "--name", "gtk-im-probe"],
+                capture_output=True, text=True)
             wids = r.stdout.split()
             if wids:
                 subprocess.run(["xdotool", "windowactivate", "--sync",
                                 wids[-1]], stderr=subprocess.DEVNULL)
                 return wids[-1]
             time.sleep(0.2)
+        proc.kill()
         raise RuntimeError("probe window not found")
 
     def current_im(self):
@@ -165,16 +195,19 @@ class Runner:
             capture_output=True, text=True)
         return r.stdout.strip().strip('"')
 
-    def ensure_mozc_x(self):
-        # IC のフォーカス確立を待つ (CurrentInputMethod が空でなくなるまで)
+    def ensure_mozc_x(self, proc):
+        # IC のフォーカス確立を待つ (CurrentInputMethod が空でなくなるまで)。
+        # 直前のケースの IC が残っていると別 IC の状態を見てしまうので
+        # フォーカスが奪われないよう、試行ごとに窓を再アクティブ化する。
         deadline = time.time() + 5
         while not self.current_im().strip('"s '):
             if time.time() > deadline:
                 raise RuntimeError("probe の IC がフォーカスされない")
             time.sleep(0.2)
-        for _ in range(4):
+        for _ in range(8):
             if "mozc" in self.current_im():
                 return
+            self.activate_window(proc)
             xdotool_key(TRIGGER_SPEC)
             time.sleep(0.4)
         raise RuntimeError(f"mozc に切り替わらない: {self.current_im()}")
@@ -196,16 +229,21 @@ class Runner:
             got = wait_file(self.buf) or ""
         else:
             proc = self.launch()
-            self.activate_window()
-            self.ensure_mozc_x()
-            for s in steps:
-                xdotool_key(s)
-                time.sleep(0.04)
-                if s == "Space":
-                    time.sleep(0.15)
-            got = wait_file(self.buf, timeout=4) or ""
-            proc.terminate()
-            proc.wait(timeout=10)
+            try:
+                self.ensure_mozc_x(proc)
+                for s in steps:
+                    xdotool_key(s)
+                    time.sleep(0.04)
+                    if s == "Space":
+                        time.sleep(0.15)
+                got = wait_file(self.buf, timeout=4) or ""
+            finally:
+                if proc.poll() is None:
+                    proc.terminate()
+                    try:
+                        proc.wait(timeout=10)
+                    except subprocess.TimeoutExpired:
+                        proc.kill()
         return got
 
     def commit_count(self):
@@ -257,6 +295,8 @@ def main():
             sys.exit(2)
         i += 1
 
+    # SIGTERM でも finally (学習ファイルの復元) が走るように SystemExit に変換
+    signal.signal(signal.SIGTERM, lambda *a: sys.exit(1))
     runner = Runner(mode, keep)
     failed = ran = 0
     try:

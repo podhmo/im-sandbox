@@ -23,9 +23,15 @@ import dbus
 import dbus.mainloop.glib
 from gi.repository import GLib
 
-dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-bus = dbus.SessionBus()
 ctx = GLib.MainContext.default()
+bus = None  # main() で初期化。import 時に接続しない (CASES を import 再利用するため)
+
+
+def ensure_bus():
+    global bus
+    if bus is None:
+        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+        bus = dbus.SessionBus()
 
 # ---- 定数 ----
 # capabilityflags.h
@@ -243,6 +249,7 @@ def main():
             sys.exit(2)
         i += 1
 
+    ensure_bus()
     try:
         im = bus.get_object("org.fcitx.Fcitx5",
                             "/org/freedesktop/portal/inputmethod")

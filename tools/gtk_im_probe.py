@@ -62,7 +62,10 @@ class Probe(Gtk.Window):
         self.keylog = open(keylog, "w") if keylog else None
         self.buf.connect("changed", self._on_changed)
         # バッファの変更は immodule に消費されたキーでは起きないので、
-        # 「キーが届いたか」をイベント側からも記録する
+        # 「キーが届いたか」をイベント側からも記録する。
+        # fcitx の GTK immodule は key snooper で消費するため、IMに消費された
+        # キーは widget の key-press-event にすら届かない。
+        # つまり key: 行に残る = アプリへ転送されたキー、となる。
         self.view.connect("key-press-event", self._on_key)
         self.connect("destroy", Gtk.main_quit)
         self.show_all()

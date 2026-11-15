@@ -28,6 +28,10 @@ sudo apt install fcitx5 fcitx5-mozc fcitx5-frontend-all gedit protobuf-compiler
 - fcitx5-mozc は `mozc_server` (`/usr/lib/mozc/mozc_server`) を介して
   mozc を動かす。設定は `~/.config/mozc/config1.db`
 
+検証ツール類の依存 (別途): `xdotool`, `maim`, `psmisc` (killall),
+`python3-dbus` (dbus-python), `python3-gi` (GTK probe 用)。`busctl` は
+systemd 付属。Emacs 用は `emacs-mozc-bin` ([mozc-emacs.md](./mozc-emacs.md))。
+
 ## WSLg の制約 (重要)
 
 weston が提供する IM 関連プロトコル (レジストリ列挙で確認):

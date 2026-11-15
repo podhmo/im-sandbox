@@ -65,29 +65,46 @@ echo 'history_learning_level: NO_HISTORY' >> "$OUT/e2e.textproto"
 protoc -I "$MOZC/src/protocol" --encode=mozc.config.Config config.proto \
   < "$OUT/e2e.textproto" > "$OUT/e2e.config1.db"
 
+LEARN_FILES="cform.db segment.db boundary.db .history.db"
+
+wait_no_proc() {
+  # killall は非同期。停止中の flush が学習ファイルを汚さないよう消えるまで待つ
+  i=0
+  while pgrep -x "$PROC" >/dev/null 2>&1; do
+    i=$((i + 1))
+    [ "$i" -gt 50 ] && break
+    sleep 0.1
+  done
+}
+
 BACKUP="$OUT/e2e.original.config1.db"
 LEARN_BACKUP="$OUT/e2e.learning"
+mkdir -p "$DIR"
 if [ -f "$DIR/config1.db" ]; then cp "$DIR/config1.db" "$BACKUP"; else rm -f "$BACKUP"; fi
 restore() {
-  if [ -f "$BACKUP" ]; then cp "$BACKUP" "$DIR/config1.db"; else rm -f "$DIR/config1.db"; fi
+  # 先にサーバを止め、実行中に生成された学習ファイルを消してから退避分を戻す
+  killall "$PROC" 2>/dev/null || true
+  wait_no_proc
+  for f in $LEARN_FILES; do rm -f "$DIR/$f"; done
   if [ -d "$LEARN_BACKUP" ]; then
     mv "$LEARN_BACKUP"/* "$LEARN_BACKUP"/.[!.]* "$DIR/" 2>/dev/null || true
     rmdir "$LEARN_BACKUP" 2>/dev/null || true
   fi
-  killall "$PROC" 2>/dev/null || true
+  if [ -f "$BACKUP" ]; then cp "$BACKUP" "$DIR/config1.db"; else rm -f "$DIR/config1.db"; fi
   echo "restored: $DIR/config1.db"
 }
 trap restore EXIT
 trap 'exit 130' INT TERM
 
-cp "$OUT/e2e.config1.db" "$DIR/config1.db"
+# サーバを止めてから設定差し替え・学習ファイル退避 (停止中 flush を避ける)
 killall "$PROC" 2>/dev/null || true
+wait_no_proc
+cp "$OUT/e2e.config1.db" "$DIR/config1.db"
 # cform.db (文字種の学習) は NO_HISTORY の対象外なので、学習ファイルごと退避する。
 # NO_HISTORY が効く segment.db / boundary.db / .history.db も念のため一緒に退避。
 mkdir -p "$LEARN_BACKUP"
-for f in cform.db segment.db boundary.db .history.db; do
+for f in $LEARN_FILES; do
   [ -f "$DIR/$f" ] && mv "$DIR/$f" "$LEARN_BACKUP/" || true
 done
-sleep 1
 echo "keymap: $MODE (history_learning_level: NO_HISTORY)"
 $RUNNER "$@"

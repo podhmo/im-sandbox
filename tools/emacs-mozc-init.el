@@ -31,9 +31,10 @@
 ;; emacs-mozc パッケージは apt 版 emacs を依存で引き込むため使わず、
 ;; emacs-mozc-bin (helper のみ) + deb から取り出した mozc.el の組み合わせ:
 ;;   sudo apt install emacs-mozc-bin
-;;   cd /tmp && apt download emacs-mozc && dpkg -x emacs-mozc_*_all.deb emacs-mozc-x
+;;   cd /tmp && apt download emacs-mozc && dpkg -x emacs-mozc_*_amd64.deb emacs-mozc-x
 ;;   mkdir -p ~/.local/share/emacs/site-lisp
-;;   cp -r /tmp/emacs-mozc-x/usr/share/emacs/site-lisp/mozc ~/.local/share/emacs/site-lisp/
+;;   cp -r /tmp/emacs-mozc-x/usr/share/emacs/site-lisp/emacs-mozc \
+;;         ~/.local/share/emacs/site-lisp/mozc
 (dolist (dir '("~/.local/share/emacs/site-lisp/mozc"
                "/usr/share/emacs/site-lisp/mozc"))
   (when (file-directory-p dir)
