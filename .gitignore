@@ -1,3 +1,6 @@
 
 __pycache__/
 *.pyc
+
+# ビルド成果物・E2Eの退避ファイル (mozc/*.ps1, mozc/*.sh が生成)
+mozc/out/
