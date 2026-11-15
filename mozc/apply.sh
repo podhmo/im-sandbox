@@ -5,7 +5,8 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 case "${1:-google}" in
   google) DIR="$HOME/Library/Application Support/Google/JapaneseInput"; PROC=GoogleJapaneseInputConverter ;;
   mozc)   DIR="$HOME/Library/Application Support/Mozc";                 PROC=MozcConverter ;;
-  *) echo "usage: $0 [google|mozc]" >&2; exit 2 ;;
+  linux)  DIR="$HOME/.config/mozc";                                     PROC=mozc_server ;;
+  *) echo "usage: $0 [google|mozc|linux]" >&2; exit 2 ;;
 esac
 mkdir -p "$DIR"
 if [ -f "$DIR/config1.db" ]; then
