@@ -2,7 +2,8 @@
 
 > [!NOTE]
 > このドキュメントは WSLg 有効な WSL2 Ubuntu 上で、GUI エディタが Mozc 経由で
-> 日本語入力できる状態への到達手順の記録。テスト方法は [mozc-e2e-linux.md](./mozc-e2e-linux.md)。
+> 日本語入力できる状態への到達手順の記録。テスト方法は [mozc-e2e-linux.md](./mozc-e2e-linux.md)、
+> Emacs 固有の設定は [mozc-emacs.md](./mozc-emacs.md)。
 
 ## 目的
 
